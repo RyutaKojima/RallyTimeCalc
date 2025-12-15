@@ -18,7 +18,7 @@ interface Player {
 
 interface Result {
   name: string;
-  delay: number;
+  delays: { [key in keyof MarchTimes]?: number };
 }
 
 export default function Home() {
@@ -62,12 +62,25 @@ export default function Home() {
       return;
     }
 
-    const maxTime = Math.max(0, ...players.flatMap(p => Object.values(p.times)));
-    const calculatedResults = players.map(player => ({
-      name: player.name,
-      delay: maxTime - Math.max(0, ...Object.values(player.times)),
-    }));
-    setResults(calculatedResults);
+    const timeCategories: (keyof MarchTimes)[] = ['castle', 't1', 't2', 't3', 't4'];
+    const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
+
+    players.forEach(p => {
+      newResults[p.name] = { name: p.name, delays: {} };
+    });
+
+    timeCategories.forEach(category => {
+      const playersForCategory = players.filter(p => p.times[category] > 0);
+
+      if (playersForCategory.length >= 2) {
+        const maxTime = Math.max(...playersForCategory.map(p => p.times[category]));
+        playersForCategory.forEach(player => {
+          newResults[player.name].delays[category] = maxTime - player.times[category];
+        });
+      }
+    });
+
+    setResults(Object.values(newResults));
   };
 
   const handleNewTimeChange = (key: keyof typeof newPlayerTimes, value: string) => {
@@ -215,10 +228,19 @@ export default function Home() {
           <h2>Calculation Results</h2>
           <p>To synchronize the arrival, players should depart with the following delays:</p>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {results.sort((a, b) => b.delay - a.delay).map((result, index) => (
-              <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
-                <strong>{result.name}:</strong> Wait for <strong>{result.delay}</strong> seconds before marching.
-              </li>
+            {results.map((result, index) => (
+              Object.keys(result.delays).length > 0 && (
+                <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
+                  <strong>{result.name}:</strong>
+                  <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
+                    {Object.entries(result.delays).map(([category, delay]) => (
+                      <li key={category}>
+                        {timeLabels[category as keyof MarchTimes]}: Wait for <strong>{delay}</strong> seconds
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              )
             ))}
           </ul>
         </div>
