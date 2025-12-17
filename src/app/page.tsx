@@ -76,7 +76,7 @@ export default function Home() {
   });
   const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
-  const [rallyWaitTime, setRallyWaitTime] = useState(60);
+  const [rallyWaitTime, setRallyWaitTime] = useState(0);
 
   useEffect(() => {
     if (players.length === 0) {
@@ -428,6 +428,7 @@ export default function Home() {
             onChange={(e) => setRallyWaitTime(Number(e.target.value))}
             style={{ padding: '8px' }}
           >
+            <option value="0">None</option>
             <option value="60">1 minute</option>
             <option value="180">3 minutes</option>
             <option value="300">5 minutes</option>
