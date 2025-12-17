@@ -111,8 +111,10 @@ export default function Home() {
   };
 
   const removePlayer = (id: number) => {
-    setPlayers(players.filter(player => player.id !== id));
-    setResults([]); // Clear previous results
+    if (window.confirm('このプレイヤーを削除してもよろしいですか？')) {
+      setPlayers(players.filter(player => player.id !== id));
+      setResults([]); // Clear previous results
+    }
   };
 
   const calculateDelays = () => {
