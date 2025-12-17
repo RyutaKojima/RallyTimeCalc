@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase'; // Adjust path as needed
-import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, Firestore } from 'firebase/firestore';
 
 
 const parseTimeToSeconds = (time: TimeInput): number => {
@@ -79,21 +79,18 @@ export default function Room({ params }: { params: { roomId: string } }) {
   const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
   const [rallyWaitTime, setRallyWaitTime] = useState(0);
+  const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
 
   // Set up Firestore listener
   useEffect(() => {
+    setIsFirebaseConfigured(!!db);
+
+    if (!db) return;
+
     const { roomId } = params;
     if (!roomId) return;
 
-    // Ensure the room document exists
-    const roomRef = doc(db, 'rooms', roomId);
-    getDoc(roomRef).then(docSnap => {
-      if (!docSnap.exists()) {
-        setDoc(roomRef, { createdAt: new Date() });
-      }
-    });
-
-    const playersCollectionRef = collection(db, 'rooms', roomId, 'players');
+    const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
     const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
       const playersData: Player[] = [];
       querySnapshot.forEach((doc) => {
@@ -112,6 +109,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
   }, [players.length]);
 
   const addPlayer = async () => {
+    if (!db) return;
     const { roomId } = params;
     const parsedTimes = {
       castle: parseTimeToSeconds(newPlayerTimes.castle),
@@ -123,7 +121,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
     const timeValues = Object.values(parsedTimes).filter(t => t > 0);
 
     if (newPlayerName && timeValues.length > 0) {
-      const playersCollectionRef = collection(db, 'rooms', roomId, 'players');
+      const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
       await addDoc(playersCollectionRef, { name: newPlayerName, times: parsedTimes });
 
       setNewPlayerName('');
@@ -144,9 +142,10 @@ export default function Room({ params }: { params: { roomId: string } }) {
   };
 
   const removePlayer = async (id: string) => {
+    if (!db) return;
     if (window.confirm('このプレイヤーを削除してもよろしいですか？')) {
       const { roomId } = params;
-      const playerDocRef = doc(db, 'rooms', roomId, 'players', id);
+      const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
       await deleteDoc(playerDocRef);
       setResults([]); // Clear previous results
     }
@@ -209,6 +208,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
   };
 
   const saveEditing = async (id: string) => {
+    if (!db) return;
     const { roomId } = params;
     const parsedTimes = {
       castle: parseTimeToSeconds(editingPlayerTimes.castle),
@@ -220,7 +220,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
     const timeValues = Object.values(parsedTimes).filter(t => t > 0);
 
     if (timeValues.length > 0) {
-      const playerDocRef = doc(db, 'rooms', roomId, 'players', id);
+      const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
       await updateDoc(playerDocRef, { times: parsedTimes });
 
       setEditingPlayerId(null);
@@ -290,6 +290,18 @@ export default function Room({ params }: { params: { roomId: string } }) {
     t4: 'T4',
   };
 
+  if (!isFirebaseConfigured) {
+    return (
+      <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
+        <div style={{ padding: '20px', background: '#ffebee', border: '1px solid #ef5350', borderRadius: '4px' }}>
+          <h1 style={{ color: '#c62828' }}>Configuration Error</h1>
+          <p>Firebase is not configured correctly. Please check your `.env.local` file and ensure all the environment variables are set with your project's credentials.</p>
+          <p>The application's database functionality is currently disabled.</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h1 style={{ textAlign: 'center' }}>March Time Calculator</h1>
@@ -337,7 +349,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
               Continuous Input
             </label>
           </div>
-          <button onClick={addPlayer} style={{ padding: '8px 12px', marginRight: '5px' }}>
+          <button onClick={addPlayer} style={{ padding: '8px 12px', marginRight: '5px' }} disabled={!isFirebaseConfigured}>
             Add Player
           </button>
           {players.length > 0 &&
@@ -348,7 +360,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
         </div>
       ) : (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <button onClick={() => setIsAddPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }}>
+          <button onClick={() => setIsAddPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }} disabled={!isFirebaseConfigured}>
             Add User
           </button>
         </div>
@@ -388,7 +400,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
                       </div>
                     ))}
                     <div style={{ marginTop: '10px' }}>
-                      <button onClick={() => saveEditing(player.id)} style={{ padding: '5px 10px', marginRight: '5px' }}>
+                      <button onClick={() => saveEditing(player.id)} style={{ padding: '5px 10px', marginRight: '5px' }} disabled={!isFirebaseConfigured}>
                         Save
                       </button>
                       <button onClick={cancelEditing} style={{ padding: '5px 10px' }}>
@@ -412,7 +424,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
                       <button onClick={() => startEditing(player)} style={{ padding: '5px 10px', marginRight: '5px' }}>
                         Edit
                       </button>
-                      <button onClick={() => removePlayer(player.id)} style={{ padding: '5px 10px', background: '#ffdddd', border: 'none', cursor: 'pointer' }}>
+                      <button onClick={() => removePlayer(player.id)} style={{ padding: '5px 10px', background: '#ffdddd', border: 'none', cursor: 'pointer' }} disabled={!isFirebaseConfigured}>
                         Remove
                       </button>
                     </div>

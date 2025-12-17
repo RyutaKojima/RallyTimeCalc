@@ -1,10 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -14,8 +10,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Function to check if the config values are valid
+const isConfigValid = (config: typeof firebaseConfig): boolean => {
+  return Object.values(config).every(value => value && !value.includes('your-'));
+};
+
+let db: Firestore | null = null;
+
+if (isConfigValid(firebaseConfig)) {
+  if (!getApps().length) {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  } else {
+    // If the app is already initialized, get the existing instance
+    const app = getApps()[0];
+    db = getFirestore(app);
+  }
+} else {
+  console.warn(`
+    -----------------------------------------------------------------
+    Firebase is not configured correctly.
+    Please make sure all environment variables in '.env.local'
+    are set with your actual Firebase project credentials.
+    Database functionality will be disabled.
+    -----------------------------------------------------------------
+  `);
+}
 
 export { db };
