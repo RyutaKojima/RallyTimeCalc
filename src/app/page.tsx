@@ -47,6 +47,17 @@ interface TimeInput {
   sec: string;
 }
 
+interface ArrivalTimeInput {
+  hour: string;
+  min: string;
+  sec: string;
+}
+
+interface DepartureResult {
+  name: string;
+  departures: { [key: string]: string };
+}
+
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
 
 
@@ -62,6 +73,8 @@ export default function Home() {
   });
   const [results, setResults] = useState<Result[]>([]);
   const [nextId, setNextId] = useState(1);
+  const [arrivalTime, setArrivalTime] = useState<ArrivalTimeInput>({ hour: '', min: '', sec: '' });
+  const [departureTimes, setDepartureTimes] = useState<DepartureResult[]>([]);
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const [editingPlayerTimes, setEditingPlayerTimes] = useState<PlayerTimeInput>({
     castle: { min: '', sec: '' },
@@ -190,6 +203,44 @@ export default function Home() {
       ...prev,
       [key]: { ...prev[key], [field]: value },
     }));
+  };
+
+  const handleArrivalTimeChange = (value: string, field: keyof ArrivalTimeInput) => {
+    setArrivalTime(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const calculateDepartureTimes = () => {
+    const arrivalHour = parseInt(arrivalTime.hour, 10) || 0;
+    const arrivalMin = parseInt(arrivalTime.min, 10) || 0;
+    const arrivalSec = parseInt(arrivalTime.sec, 10) || 0;
+
+    if (isNaN(arrivalHour) || isNaN(arrivalMin) || isNaN(arrivalSec)) {
+      alert('Please enter a valid arrival time.');
+      return;
+    }
+
+    const arrivalDate = new Date();
+    arrivalDate.setHours(arrivalHour, arrivalMin, arrivalSec, 0);
+
+    const newDepartureTimes = players.map(player => {
+      const departures: { [key: string]: string } = {};
+      for (const key in player.times) {
+        const marchTime = player.times[key as keyof MarchTimes];
+        if (marchTime > 0) {
+          const departureDate = new Date(arrivalDate.getTime() - marchTime * 1000);
+          const hours = String(departureDate.getHours()).padStart(2, '0');
+          const minutes = String(departureDate.getMinutes()).padStart(2, '0');
+          const seconds = String(departureDate.getSeconds()).padStart(2, '0');
+          departures[key] = `${hours}:${minutes}:${seconds}`;
+        }
+      }
+      return { name: player.name, departures };
+    });
+
+    setDepartureTimes(newDepartureTimes);
   };
 
   const timeLabels: { [K in keyof MarchTimes]: string } = {
@@ -338,6 +389,64 @@ export default function Home() {
           </ul>
         </div>
       )}
+
+      <div style={{ marginTop: '30px', borderTop: '2px solid #666', paddingTop: '20px' }}>
+        <h2 style={{ textAlign: 'center' }}>Departure Time Calculator</h2>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
+          <label htmlFor="arrival-hour">Arrival Time:</label>
+          <input
+            id="arrival-hour"
+            type="number"
+            value={arrivalTime.hour}
+            onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
+            placeholder="HH"
+            style={{ padding: '8px', width: '60px' }}
+          />
+          <span>:</span>
+          <input
+            id="arrival-min"
+            type="number"
+            value={arrivalTime.min}
+            onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
+            placeholder="MM"
+            style={{ padding: '8px', width: '60px' }}
+          />
+          <span>:</span>
+          <input
+            id="arrival-sec"
+            type="number"
+            value={arrivalTime.sec}
+            onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
+            placeholder="SS"
+            style={{ padding: '8px', width: '60px' }}
+          />
+        </div>
+        <div style={{textAlign: 'center'}}>
+          <button onClick={calculateDepartureTimes} style={{ padding: '10px 20px', fontSize: '16px' }}>
+            Calculate Departure Times
+          </button>
+        </div>
+
+        {departureTimes.length > 0 && (
+          <div style={{ marginTop: '20px' }}>
+            <h2>Departure Times</h2>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {departureTimes.map((player, index) => (
+                <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
+                  <strong>{player.name}:</strong>
+                  <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
+                    {Object.entries(player.departures).map(([category, time]) => (
+                      <li key={category}>
+                        {timeLabels[category as keyof MarchTimes]}: <strong>{time as string}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
