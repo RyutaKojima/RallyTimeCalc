@@ -293,6 +293,9 @@ export default function Room({ params }: { params: { roomId: string } }) {
   if (!isFirebaseConfigured) {
     return (
       <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
+          Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{params.roomId}</code>
+        </h2>
         <div style={{ padding: '20px', background: '#ffebee', border: '1px solid #ef5350', borderRadius: '4px' }}>
           <h1 style={{ color: '#c62828' }}>Configuration Error</h1>
           <p>Firebase is not configured correctly. Please check your `.env.local` file and ensure all the environment variables are set with your project's credentials.</p>
