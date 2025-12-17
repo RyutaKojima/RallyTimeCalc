@@ -75,6 +75,7 @@ export default function Home() {
     t4: { min: '', sec: '' },
   });
   const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
+  const [isContinuousInput, setIsContinuousInput] = useState(false);
 
   useEffect(() => {
     if (players.length === 0) {
@@ -104,7 +105,9 @@ export default function Home() {
         t4: { min: '', sec: '' },
       });
       setResults([]); // Clear previous results
-      setIsAddPlayerFormVisible(false); // Hide form after adding
+      if (!isContinuousInput) {
+        setIsAddPlayerFormVisible(false); // Hide form after adding
+      }
     } else {
       alert('Please enter a valid name and at least one positive march time.');
     }
@@ -285,6 +288,17 @@ export default function Home() {
               />
             </div>
           ))}
+          <div style={{ margin: '10px 0' }}>
+            <input
+              type="checkbox"
+              id="continuous-input"
+              checked={isContinuousInput}
+              onChange={(e) => setIsContinuousInput(e.target.checked)}
+            />
+            <label htmlFor="continuous-input" style={{ marginLeft: '5px' }}>
+              Continuous Input
+            </label>
+          </div>
           <button onClick={addPlayer} style={{ padding: '8px 12px', marginRight: '5px' }}>
             Add Player
           </button>
