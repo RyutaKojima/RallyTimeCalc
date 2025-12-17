@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const parseTimeToSeconds = (time: TimeInput): number => {
   const minutes = parseInt(time.min, 10) || 0;
@@ -74,6 +74,13 @@ export default function Home() {
     t3: { min: '', sec: '' },
     t4: { min: '', sec: '' },
   });
+  const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
+
+  useEffect(() => {
+    if (players.length === 0) {
+      setIsAddPlayerFormVisible(true);
+    }
+  }, [players.length]);
 
   const addPlayer = () => {
     const parsedTimes = {
@@ -97,6 +104,7 @@ export default function Home() {
         t4: { min: '', sec: '' },
       });
       setResults([]); // Clear previous results
+      setIsAddPlayerFormVisible(false); // Hide form after adding
     } else {
       alert('Please enter a valid name and at least one positive march time.');
     }
@@ -246,40 +254,51 @@ export default function Home() {
     <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h1 style={{ textAlign: 'center' }}>March Time Calculator</h1>
 
-      <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
-        <input
-          type="text"
-          value={newPlayerName}
-          onChange={(e) => setNewPlayerName(e.target.value)}
-          placeholder="Player Name"
-          style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
-        />
-        {Object.keys(newPlayerTimes).map((key) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
-            <label htmlFor={`new-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
-            <input
-              id={`new-${key}-min`}
-              type="number"
-              value={newPlayerTimes[key as keyof typeof newPlayerTimes].min}
-              onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'min')}
-              placeholder="Minutes"
-              style={{ padding: '8px', width: '80px' }}
-            />
-            <span>:</span>
-            <input
-              id={`new-${key}-sec`}
-              type="number"
-              value={newPlayerTimes[key as keyof typeof newPlayerTimes].sec}
-              onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'sec')}
-              placeholder="Seconds"
-              style={{ padding: '8px', width: '80px' }}
-            />
-          </div>
-        ))}
-        <button onClick={addPlayer} style={{ padding: '8px 12px' }}>
-          Add Player
-        </button>
-      </div>
+      {isAddPlayerFormVisible ? (
+        <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
+          <input
+            type="text"
+            value={newPlayerName}
+            onChange={(e) => setNewPlayerName(e.target.value)}
+            placeholder="Player Name"
+            style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
+          />
+          {Object.keys(newPlayerTimes).map((key) => (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+              <label htmlFor={`new-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
+              <input
+                id={`new-${key}-min`}
+                type="number"
+                value={newPlayerTimes[key as keyof typeof newPlayerTimes].min}
+                onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'min')}
+                placeholder="Minutes"
+                style={{ padding: '8px', width: '80px' }}
+              />
+              <span>:</span>
+              <input
+                id={`new-${key}-sec`}
+                type="number"
+                value={newPlayerTimes[key as keyof typeof newPlayerTimes].sec}
+                onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'sec')}
+                placeholder="Seconds"
+                style={{ padding: '8px', width: '80px' }}
+              />
+            </div>
+          ))}
+          <button onClick={addPlayer} style={{ padding: '8px 12px', marginRight: '5px' }}>
+            Add Player
+          </button>
+          <button onClick={() => setIsAddPlayerFormVisible(false)} style={{ padding: '8px 12px' }}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <button onClick={() => setIsAddPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }}>
+            Add User
+          </button>
+        </div>
+      )}
 
       <div>
         <h2>Player List</h2>
