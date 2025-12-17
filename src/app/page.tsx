@@ -1,23 +1,13 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-
-// A simple utility to generate a random room ID.
-// For a production application, a more robust solution like UUID is recommended.
-const generateRoomId = (length: number = 8): string => {
-  const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
+import { v7 as uuidv7 } from 'uuid';
 
 export default function Home() {
   const router = useRouter();
 
   const createRoom = () => {
-    const roomId = generateRoomId();
+    const roomId = uuidv7();
     router.push(`/room/${roomId}`);
   };
 
