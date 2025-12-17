@@ -9,12 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@types/uuid": "^9.0.8",
     "firebase": "^12.7.0",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
