@@ -9,18 +9,9 @@ const parseTimeToSeconds = (time: TimeInput): number => {
 };
 
 const formatTime = (totalSeconds: number): string => {
-  if (totalSeconds === 0) return '0 seconds';
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  let result = '';
-  if (minutes > 0) {
-    result += `${minutes} minute${minutes > 1 ? 's' : ''}`;
-  }
-  if (seconds > 0) {
-    if (result.length > 0) result += ' ';
-    result += `${seconds} second${seconds > 1 ? 's' : ''}`;
-  }
-  return result;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
 };
 
 interface MarchTimes {
