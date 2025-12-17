@@ -76,6 +76,7 @@ export default function Home() {
   });
   const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
+  const [rallyWaitTime, setRallyWaitTime] = useState(0);
 
   useEffect(() => {
     if (players.length === 0) {
@@ -234,7 +235,7 @@ export default function Home() {
       for (const key in player.times) {
         const marchTime = player.times[key as keyof MarchTimes];
         if (marchTime > 0) {
-          const departureDate = new Date(arrivalDate.getTime() - marchTime * 1000);
+          const departureDate = new Date(arrivalDate.getTime() - (marchTime + rallyWaitTime) * 1000);
           const hours = String(departureDate.getHours()).padStart(2, '0');
           const minutes = String(departureDate.getMinutes()).padStart(2, '0');
           const seconds = String(departureDate.getSeconds()).padStart(2, '0');
@@ -418,6 +419,23 @@ export default function Home() {
 
       <div style={{ marginTop: '30px', borderTop: '2px solid #666', paddingTop: '20px' }}>
         <h2 style={{ textAlign: 'center' }}>Departure Time Calculator</h2>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+          <label htmlFor="rally-wait-time">Rally Waiting Time:</label>
+          <select
+            id="rally-wait-time"
+            value={rallyWaitTime}
+            onChange={(e) => setRallyWaitTime(Number(e.target.value))}
+            style={{ padding: '8px' }}
+          >
+            <option value="0">None</option>
+            <option value="60">1 minute</option>
+            <option value="180">3 minutes</option>
+            <option value="300">5 minutes</option>
+            <option value="600">10 minutes</option>
+          </select>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
           <label htmlFor="arrival-hour">Arrival Time:</label>
           <input
@@ -456,7 +474,7 @@ export default function Home() {
         {departureTimes.length > 0 && (
           <div style={{ marginTop: '20px' }}>
             <h2>Departure Times</h2>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+            <ul id="departure-times-list" style={{ listStyle: 'none', padding: 0 }}>
               {departureTimes.map((player, index) => (
                 <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
                   <strong>{player.name}:</strong>
