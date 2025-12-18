@@ -76,6 +76,7 @@ export default function Room() {
   const [results, setResults] = useState<Result[]>([]);
   const [departureTimes, setDepartureTimes] = useState<DepartureResult[]>([]);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editingPlayerName, setEditingPlayerName] = useState('');
   const [editingPlayerTimes, setEditingPlayerTimes] = useState<PlayerTimeInput>({
     castle: { min: '', sec: '' },
     t1: { min: '', sec: '' },
@@ -223,6 +224,7 @@ export default function Room() {
 
   const startEditing = (player: Player) => {
     setEditingPlayerId(player.id);
+    setEditingPlayerName(player.name);
     setEditingPlayerTimes({
       castle: { min: String(Math.floor(player.times.castle / 60)), sec: String(player.times.castle % 60) },
       t1: { min: String(Math.floor(player.times.t1 / 60)), sec: String(player.times.t1 % 60) },
@@ -234,6 +236,7 @@ export default function Room() {
 
   const cancelEditing = () => {
     setEditingPlayerId(null);
+    setEditingPlayerName('');
     setEditingPlayerTimes({
       castle: { min: '', sec: '' },
       t1: { min: '', sec: '' },
@@ -254,11 +257,12 @@ export default function Room() {
     };
     const timeValues = Object.values(parsedTimes).filter(t => t > 0);
 
-    if (timeValues.length > 0) {
+    if (editingPlayerName.trim() && timeValues.length > 0) {
       const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
-      await updateDoc(playerDocRef, { times: parsedTimes });
+      await updateDoc(playerDocRef, { name: editingPlayerName.trim(), times: parsedTimes });
 
       setEditingPlayerId(null);
+      setEditingPlayerName('');
       setEditingPlayerTimes({
         castle: { min: '', sec: '' },
         t1: { min: '', sec: '' },
@@ -268,7 +272,7 @@ export default function Room() {
       });
       setResults([]);
     } else {
-      alert('Please enter at least one valid time.');
+      alert('Please enter a valid name and at least one valid time.');
     }
   };
 
@@ -428,7 +432,13 @@ export default function Room() {
               <li key={player.id} data-testid={`player-item-${player.name}`} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc' }}>
                 {editingPlayerId === player.id ? (
                   <div>
-                    <p>Editing <strong>{player.name}</strong></p>
+                    <input
+                      type="text"
+                      value={editingPlayerName}
+                      onChange={(e) => setEditingPlayerName(e.target.value)}
+                      placeholder="Player Name"
+                      style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
+                    />
                     {timeCategories.map((key) => (
                       <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
                         <label htmlFor={`edit-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
