@@ -55,6 +55,7 @@ interface DepartureResult {
 
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
 
+const timeCategories: (keyof MarchTimes)[] = ['castle', 't1', 't2', 't3', 't4'];
 
 export default function Room() {
   const params = useParams();
@@ -164,7 +165,6 @@ export default function Room() {
       return;
     }
 
-    const timeCategories: (keyof MarchTimes)[] = ['castle', 't1', 't2', 't3', 't4'];
     const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
 
     players.forEach(p => {
@@ -333,7 +333,7 @@ export default function Room() {
             placeholder="Player Name"
             style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
           />
-          {Object.keys(newPlayerTimes).map((key) => (
+          {timeCategories.map((key) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
               <label htmlFor={`new-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
               <input
@@ -394,7 +394,7 @@ export default function Room() {
                 {editingPlayerId === player.id ? (
                   <div>
                     <p>Editing <strong>{player.name}</strong></p>
-                    {Object.keys(editingPlayerTimes).map((key) => (
+                    {timeCategories.map((key) => (
                       <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
                         <label htmlFor={`edit-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
                         <input
@@ -430,10 +430,10 @@ export default function Room() {
                     <div>
                       <strong>{player.name}</strong>
                       <ul style={{ listStyle: 'none', paddingLeft: '20px', fontSize: '0.9em' }}>
-                        {Object.entries(player.times)
-                          .filter(([, time]) => time > 0)
-                          .map(([category, time]) => (
-                            <li key={category}>{timeLabels[category as keyof MarchTimes]}: {formatTime(time)}</li>
+                        {timeCategories
+                          .filter(category => player.times[category] > 0)
+                          .map(category => (
+                            <li key={category}>{timeLabels[category]}: {formatTime(player.times[category])}</li>
                           ))}
                       </ul>
                     </div>
@@ -471,11 +471,13 @@ export default function Room() {
                 <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
                   <strong>{result.name}:</strong>
                   <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
-                    {Object.entries(result.delays).map(([category, delay]) => (
-                      <li key={category}>
-                        {timeLabels[category as keyof MarchTimes]}: Wait for <strong>{formatTime(delay as number)}</strong>
-                      </li>
-                    ))}
+                    {timeCategories
+                      .filter(category => result.delays[category] !== undefined)
+                      .map(category => (
+                        <li key={category}>
+                          {timeLabels[category]}: Wait for <strong>{formatTime(result.delays[category] as number)}</strong>
+                        </li>
+                      ))}
                   </ul>
                 </li>
               )
@@ -546,11 +548,13 @@ export default function Room() {
                 <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
                   <strong>{player.name}:</strong>
                   <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
-                    {Object.entries(player.departures).map(([category, time]) => (
-                      <li key={category}>
-                        {timeLabels[category as keyof MarchTimes]}: <strong>{time as string}</strong>
-                      </li>
-                    ))}
+                    {timeCategories
+                      .filter(category => player.departures[category] !== undefined)
+                      .map(category => (
+                        <li key={category}>
+                          {timeLabels[category]}: <strong>{player.departures[category]}</strong>
+                        </li>
+                      ))}
                   </ul>
                 </li>
               ))}
