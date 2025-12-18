@@ -53,6 +53,11 @@ interface DepartureResult {
   departures: { [key: string]: string };
 }
 
+interface RoomData {
+  rallyWaitTime: number;
+  arrivalTime: ArrivalTimeInput;
+}
+
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
 
 const timeCategories: (keyof MarchTimes)[] = ['castle', 't1', 't2', 't3', 't4'];
@@ -69,7 +74,6 @@ export default function Room() {
     t4: { min: '', sec: '' },
   });
   const [results, setResults] = useState<Result[]>([]);
-  const [arrivalTime, setArrivalTime] = useState<ArrivalTimeInput>({ hour: '', min: '', sec: '' });
   const [departureTimes, setDepartureTimes] = useState<DepartureResult[]>([]);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingPlayerTimes, setEditingPlayerTimes] = useState<PlayerTimeInput>({
@@ -81,10 +85,13 @@ export default function Room() {
   });
   const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
-  const [rallyWaitTime, setRallyWaitTime] = useState(0);
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [roomData, setRoomData] = useState<RoomData>({
+    rallyWaitTime: 0,
+    arrivalTime: { hour: '', min: '', sec: '' },
+  });
 
   useEffect(() => {
     const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
@@ -110,6 +117,28 @@ export default function Room() {
     });
 
     return () => unsubscribe(); // Clean up listener
+  }, [roomId]);
+
+  // Set up Firestore listener for room data
+  useEffect(() => {
+    if (!db || !roomId) return;
+
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    const unsubscribe = onSnapshot(roomDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setRoomData(docSnap.data() as RoomData);
+      } else {
+        // If the room document doesn't exist, create it with default values
+        const defaultRoomData: RoomData = {
+          rallyWaitTime: 0,
+          arrivalTime: { hour: '', min: '', sec: '' }
+        };
+        // Use setDoc to create the document
+        setDoc(roomDocRef, defaultRoomData);
+      }
+    });
+
+    return () => unsubscribe(); // Clean up the listener
   }, [roomId]);
 
   useEffect(() => {
@@ -250,17 +279,23 @@ export default function Room() {
     }));
   };
 
-  const handleArrivalTimeChange = (value: string, field: keyof ArrivalTimeInput) => {
-    setArrivalTime(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleArrivalTimeChange = async (value: string, field: keyof ArrivalTimeInput) => {
+    if (!db || !roomId) return;
+    const newArrivalTime = { ...roomData.arrivalTime, [field]: value };
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    await setDoc(roomDocRef, { arrivalTime: newArrivalTime }, { merge: true });
+  };
+
+  const handleRallyWaitTimeChange = async (value: number) => {
+    if (!db || !roomId) return;
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    await setDoc(roomDocRef, { rallyWaitTime: value }, { merge: true });
   };
 
   const calculateDepartureTimes = () => {
-    const arrivalHour = parseInt(arrivalTime.hour, 10) || 0;
-    const arrivalMin = parseInt(arrivalTime.min, 10) || 0;
-    const arrivalSec = parseInt(arrivalTime.sec, 10) || 0;
+    const arrivalHour = parseInt(roomData.arrivalTime.hour, 10) || 0;
+    const arrivalMin = parseInt(roomData.arrivalTime.min, 10) || 0;
+    const arrivalSec = parseInt(roomData.arrivalTime.sec, 10) || 0;
 
     if (isNaN(arrivalHour) || isNaN(arrivalMin) || isNaN(arrivalSec)) {
       alert('Please enter a valid arrival time.');
@@ -275,7 +310,7 @@ export default function Room() {
       for (const key in player.times) {
         const marchTime = player.times[key as keyof MarchTimes];
         if (marchTime > 0) {
-          const departureDate = new Date(arrivalDate.getTime() - (marchTime + rallyWaitTime) * 1000);
+          const departureDate = new Date(arrivalDate.getTime() - (marchTime + roomData.rallyWaitTime) * 1000);
           const hours = String(departureDate.getHours()).padStart(2, '0');
           const minutes = String(departureDate.getMinutes()).padStart(2, '0');
           const seconds = String(departureDate.getSeconds()).padStart(2, '0');
@@ -493,8 +528,8 @@ export default function Room() {
           <label htmlFor="rally-wait-time">Rally Waiting Time:</label>
           <select
             id="rally-wait-time"
-            value={rallyWaitTime}
-            onChange={(e) => setRallyWaitTime(Number(e.target.value))}
+            value={roomData.rallyWaitTime || 0}
+            onChange={(e) => handleRallyWaitTimeChange(Number(e.target.value))}
             style={{ padding: '8px' }}
           >
             <option value="0">None</option>
@@ -510,7 +545,7 @@ export default function Room() {
           <input
             id="arrival-hour"
             type="number"
-            value={arrivalTime.hour}
+            value={roomData.arrivalTime?.hour || ''}
             onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
             placeholder="HH"
             style={{ padding: '8px', width: '60px' }}
@@ -519,7 +554,7 @@ export default function Room() {
           <input
             id="arrival-min"
             type="number"
-            value={arrivalTime.min}
+            value={roomData.arrivalTime?.min || ''}
             onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
             placeholder="MM"
             style={{ padding: '8px', width: '60px' }}
@@ -528,7 +563,7 @@ export default function Room() {
           <input
             id="arrival-sec"
             type="number"
-            value={arrivalTime.sec}
+            value={roomData.arrivalTime?.sec || ''}
             onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
             placeholder="SS"
             style={{ padding: '8px', width: '60px' }}
