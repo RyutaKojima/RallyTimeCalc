@@ -89,6 +89,7 @@ export default function Room() {
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [copyFeedback, setCopyFeedback] = useState('');
   const [roomData, setRoomData] = useState<RoomData>({
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
@@ -327,6 +328,17 @@ export default function Room() {
     setDepartureTimes(newDepartureTimes);
   };
 
+  const handleCopy = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyFeedback('Copied!');
+      setTimeout(() => setCopyFeedback(''), 2000); // Clear feedback after 2 seconds
+    }, (err) => {
+      setCopyFeedback('Failed!');
+      console.error('Could not copy text: ', err);
+    });
+  };
+
   const timeLabels: { [K in keyof MarchTimes]: string } = {
     castle: 'Castle',
     t1: 'T1',
@@ -361,7 +373,30 @@ export default function Room() {
   return (
     <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h1 style={{ textAlign: 'center' }}>March Time Calculator</h1>
-      <h2 style={{ textAlign: 'center' }}>Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{roomId}</code></h2>
+      <h2 style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        Room ID:
+        <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '10px', marginRight: '5px' }}>
+          {roomId}
+        </code>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ cursor: 'pointer' }}
+          onClick={handleCopy}
+          data-testid="copy-icon"
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        {copyFeedback && <span style={{ marginLeft: '10px', color: 'green', fontSize: '14px' }}>{copyFeedback}</span>}
+      </h2>
 
       {isAddPlayerFormVisible ? (
         <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
