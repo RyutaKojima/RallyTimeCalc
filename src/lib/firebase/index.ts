@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -16,15 +17,18 @@ const isConfigValid = (config: typeof firebaseConfig): boolean => {
 };
 
 let db: Firestore | null = null;
+let auth: Auth | null = null;
 
 if (isConfigValid(firebaseConfig)) {
   if (!getApps().length) {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    auth = getAuth(app);
   } else {
     // If the app is already initialized, get the existing instance
     const app = getApps()[0];
     db = getFirestore(app);
+    auth = getAuth(app);
   }
 } else {
   console.warn(`
@@ -37,4 +41,4 @@ if (isConfigValid(firebaseConfig)) {
   `);
 }
 
-export { db };
+export { db, auth };

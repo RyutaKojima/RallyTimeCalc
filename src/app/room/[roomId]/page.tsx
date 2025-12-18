@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '../../../lib/firebase'; // Adjust path as needed
+import { db, auth } from '../../../lib/firebase';
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, Firestore } from 'firebase/firestore';
+import { signInAnonymously, onAuthStateChanged, User } from 'firebase/auth';
 
 
 const parseTimeToSeconds = (time: TimeInput): number => {
@@ -90,6 +91,7 @@ export default function Room() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState('');
+  const [user, setUser] = useState<User | null>(null);
   const [roomData, setRoomData] = useState<RoomData>({
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
@@ -99,15 +101,35 @@ export default function Room() {
     const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
     if (currentRoomId) {
       setRoomId(currentRoomId);
-      setIsLoading(false);
     }
   }, [params.roomId]);
 
+  // Set up Firebase auth listener
+  useEffect(() => {
+    setIsFirebaseConfigured(!!db && !!auth);
+    if (!auth) {
+      setIsLoading(false);
+      return;
+    };
+
+    const unsubscribeAuth = onAuthStateChanged(auth!, (user) => {
+      if (user) {
+        setUser(user);
+        setIsLoading(false);
+      } else {
+        signInAnonymously(auth!).catch((error) => {
+          console.error("Anonymous sign-in failed:", error);
+          setIsLoading(false);
+        });
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
   // Set up Firestore listener
   useEffect(() => {
-    setIsFirebaseConfigured(!!db);
-
-    if (!db || !roomId) return;
+    if (!db || !roomId || !user) return;
 
     const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
     const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
@@ -119,11 +141,11 @@ export default function Room() {
     });
 
     return () => unsubscribe(); // Clean up listener
-  }, [roomId]);
+  }, [roomId, user]);
 
   // Set up Firestore listener for room data
   useEffect(() => {
-    if (!db || !roomId) return;
+    if (!db || !roomId || !user) return;
 
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
     const unsubscribe = onSnapshot(roomDocRef, (docSnap) => {
@@ -141,7 +163,7 @@ export default function Room() {
     });
 
     return () => unsubscribe(); // Clean up the listener
-  }, [roomId]);
+  }, [roomId, user]);
 
   useEffect(() => {
     if (players.length === 0) {
