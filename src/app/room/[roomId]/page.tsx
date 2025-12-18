@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { db } from '../../../lib/firebase'; // Adjust path as needed
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, Firestore } from 'firebase/firestore';
 
@@ -55,7 +56,8 @@ interface DepartureResult {
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
 
 
-export default function Room({ params }: { params: { roomId: string } }) {
+export default function Room() {
+  const params = useParams();
   const [players, setPlayers] = useState<Player[]>([]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerTimes, setNewPlayerTimes] = useState<PlayerTimeInput>({
@@ -80,15 +82,22 @@ export default function Room({ params }: { params: { roomId: string } }) {
   const [isContinuousInput, setIsContinuousInput] = useState(false);
   const [rallyWaitTime, setRallyWaitTime] = useState(0);
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
+    if (currentRoomId) {
+      setRoomId(currentRoomId);
+      setIsLoading(false);
+    }
+  }, [params.roomId]);
 
   // Set up Firestore listener
   useEffect(() => {
     setIsFirebaseConfigured(!!db);
 
-    if (!db) return;
-
-    const { roomId } = params;
-    if (!roomId) return;
+    if (!db || !roomId) return;
 
     const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
     const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
@@ -100,7 +109,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
     });
 
     return () => unsubscribe(); // Clean up listener
-  }, [params.roomId]);
+  }, [roomId]);
 
   useEffect(() => {
     if (players.length === 0) {
@@ -109,8 +118,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
   }, [players.length]);
 
   const addPlayer = async () => {
-    if (!db) return;
-    const { roomId } = params;
+    if (!db || !roomId) return;
     const parsedTimes = {
       castle: parseTimeToSeconds(newPlayerTimes.castle),
       t1: parseTimeToSeconds(newPlayerTimes.t1),
@@ -142,9 +150,8 @@ export default function Room({ params }: { params: { roomId: string } }) {
   };
 
   const removePlayer = async (id: string) => {
-    if (!db) return;
+    if (!db || !roomId) return;
     if (window.confirm('このプレイヤーを削除してもよろしいですか？')) {
-      const { roomId } = params;
       const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
       await deleteDoc(playerDocRef);
       setResults([]); // Clear previous results
@@ -208,8 +215,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
   };
 
   const saveEditing = async (id: string) => {
-    if (!db) return;
-    const { roomId } = params;
+    if (!db || !roomId) return;
     const parsedTimes = {
       castle: parseTimeToSeconds(editingPlayerTimes.castle),
       t1: parseTimeToSeconds(editingPlayerTimes.t1),
@@ -290,11 +296,19 @@ export default function Room({ params }: { params: { roomId: string } }) {
     t4: 'T4',
   };
 
+  if (isLoading) {
+    return (
+      <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </main>
+    );
+  }
+
   if (!isFirebaseConfigured) {
     return (
       <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
-          Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{params.roomId}</code>
+          Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{roomId}</code>
         </h2>
         <div style={{ padding: '20px', background: '#ffebee', border: '1px solid #ef5350', borderRadius: '4px' }}>
           <h1 style={{ color: '#c62828' }}>Configuration Error</h1>
@@ -308,7 +322,7 @@ export default function Room({ params }: { params: { roomId: string } }) {
   return (
     <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px' }}>
       <h1 style={{ textAlign: 'center' }}>March Time Calculator</h1>
-      <h2 style={{ textAlign: 'center' }}>Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{params.roomId}</code></h2>
+      <h2 style={{ textAlign: 'center' }}>Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{roomId}</code></h2>
 
       {isAddPlayerFormVisible ? (
         <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
