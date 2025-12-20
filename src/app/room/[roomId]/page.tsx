@@ -30,6 +30,7 @@ interface Player {
   id: string; // Firestore document ID
   name: string;
   times: MarchTimes;
+  enabled: boolean;
 }
 
 interface Result {
@@ -164,7 +165,7 @@ export default function Room() {
 
     if (newPlayerName && timeValues.length > 0) {
       const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
-      await addDoc(playersCollectionRef, { name: newPlayerName, times: parsedTimes });
+      await addDoc(playersCollectionRef, { name: newPlayerName, times: parsedTimes, enabled: true });
 
       setNewPlayerName('');
       setNewPlayerTimes({
@@ -193,19 +194,21 @@ export default function Room() {
   };
 
   const calculateDelays = () => {
-    if (players.length < 2) {
-      alert('Please add at least two players to calculate delays.');
+    const enabledPlayers = players.filter(p => p.enabled !== false);
+    if (enabledPlayers.length < 2) {
+      alert('Please select at least two players to calculate delays.');
+      setResults([]);
       return;
     }
 
     const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
 
-    players.forEach(p => {
+    enabledPlayers.forEach(p => {
       newResults[p.name] = { name: p.name, delays: {} };
     });
 
     timeCategories.forEach(category => {
-      const playersForCategory = players.filter(p => p.times[category] > 0);
+      const playersForCategory = enabledPlayers.filter(p => p.times[category] > 0);
 
       if (playersForCategory.length >= 2) {
         const maxTime = Math.max(...playersForCategory.map(p => p.times[category]));
@@ -216,6 +219,12 @@ export default function Room() {
     });
 
     setResults(Object.values(newResults));
+  };
+
+  const handleTogglePlayerEnabled = async (id: string, enabled: boolean) => {
+    if (!db || !roomId) return;
+    const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
+    await updateDoc(playerDocRef, { enabled });
   };
 
   const handleNewTimeChange = (key: keyof PlayerTimeInput, value: string, field: 'min' | 'sec') => {
@@ -334,11 +343,16 @@ export default function Room() {
       alert('Please enter a valid arrival time.');
       return;
     }
+    const enabledPlayers = players.filter(p => p.enabled !== false);
+    if (enabledPlayers.length < 1) {
+      setDepartureTimes([]);
+      return;
+    }
 
     const arrivalDate = new Date();
     arrivalDate.setHours(arrivalHour, arrivalMin, arrivalSec, 0);
 
-    const newDepartureTimes = players.map(player => {
+    const newDepartureTimes = enabledPlayers.map(player => {
       const departures: { [key: string]: string } = {};
       for (const key in player.times) {
         const marchTime = player.times[key as keyof MarchTimes];
@@ -535,15 +549,23 @@ export default function Room() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong>{player.name}</strong>
-                      <ul style={{ listStyle: 'none', paddingLeft: '20px', fontSize: '0.9em' }}>
-                        {timeCategories
-                          .filter(category => player.times[category] > 0)
-                          .map(category => (
-                            <li key={category}>{timeLabels[category]}: {formatTime(player.times[category])}</li>
-                          ))}
-                      </ul>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={player.enabled !== false}
+                        onChange={(e) => handleTogglePlayerEnabled(player.id, e.target.checked)}
+                        style={{ marginRight: '10px' }}
+                      />
+                      <div>
+                        <strong>{player.name}</strong>
+                        <ul style={{ listStyle: 'none', paddingLeft: '20px', fontSize: '0.9em', margin: 0 }}>
+                          {timeCategories
+                            .filter(category => player.times[category] > 0)
+                            .map(category => (
+                              <li key={category}>{timeLabels[category]}: {formatTime(player.times[category])}</li>
+                            ))}
+                        </ul>
+                      </div>
                     </div>
                     <div>
                       <button onClick={() => startEditing(player)} style={{ padding: '5px 10px', marginRight: '5px' }}>
