@@ -90,6 +90,8 @@ export default function Room() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState('');
+  const [copyDepartureFeedback, setCopyDepartureFeedback] = useState('');
+  const [selectedTargetForCopy, setSelectedTargetForCopy] = useState<keyof MarchTimes>('castle');
   const [roomData, setRoomData] = useState<RoomData>({
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
@@ -232,6 +234,32 @@ export default function Room() {
       t2: { min: String(Math.floor(player.times.t2 / 60)), sec: String(player.times.t2 % 60) },
       t3: { min: String(Math.floor(player.times.t3 / 60)), sec: String(player.times.t3 % 60) },
       t4: { min: String(Math.floor(player.times.t4 / 60)), sec: String(player.times.t4 % 60) },
+    });
+  };
+
+  const handleDepartureCopy = () => {
+    if (departureTimes.length === 0) return;
+
+    const target = selectedTargetForCopy;
+    let copyText = `${timeLabels[target]} Departure Times:\n`;
+
+    const sortedTimes = [...departureTimes]
+      .filter(p => p.departures[target])
+      .sort((a, b) => {
+        // Sort by departure time ascending
+        return a.departures[target].localeCompare(b.departures[target]);
+      });
+
+    sortedTimes.forEach(player => {
+      copyText += `${player.name}: ${player.departures[target]}\n`;
+    });
+
+    navigator.clipboard.writeText(copyText).then(() => {
+      setCopyDepartureFeedback('Copied!');
+      setTimeout(() => setCopyDepartureFeedback(''), 2000);
+    }, (err) => {
+      setCopyDepartureFeedback('Failed!');
+      console.error('Could not copy text: ', err);
     });
   };
 
@@ -623,6 +651,22 @@ export default function Room() {
         {departureTimes.length > 0 && (
           <div style={{ marginTop: '20px' }}>
             <h2>Departure Times</h2>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+              <select
+                data-testid="copy-target-select"
+                value={selectedTargetForCopy}
+                onChange={(e) => setSelectedTargetForCopy(e.target.value as keyof MarchTimes)}
+                style={{ padding: '8px' }}
+              >
+                {timeCategories.map(cat => (
+                  <option key={cat} value={cat}>{timeLabels[cat]}</option>
+                ))}
+              </select>
+              <button onClick={handleDepartureCopy} style={{ padding: '8px 12px' }}>
+                Copy
+              </button>
+              {copyDepartureFeedback && <span style={{ color: 'green', fontSize: '14px' }}>{copyDepartureFeedback}</span>}
+            </div>
             <ul id="departure-times-list" style={{ listStyle: 'none', padding: 0 }}>
               {departureTimes.map((player, index) => (
                 <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
