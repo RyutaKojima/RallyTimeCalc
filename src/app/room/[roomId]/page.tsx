@@ -85,7 +85,7 @@ export default function Room() {
     t3: { min: '', sec: '' },
     t4: { min: '', sec: '' },
   });
-  const [isAddPlayerFormVisible, setIsAddPlayerFormVisible] = useState(players.length === 0);
+  const [isNewPlayerFormVisible, setIsNewPlayerFormVisible] = useState(false);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -146,12 +146,6 @@ export default function Room() {
     return () => unsubscribe(); // Clean up the listener
   }, [roomId]);
 
-  useEffect(() => {
-    if (players.length === 0) {
-      setIsAddPlayerFormVisible(true);
-    }
-  }, [players.length]);
-
   const addPlayer = async () => {
     if (!db || !roomId) return;
     const parsedTimes = {
@@ -177,7 +171,7 @@ export default function Room() {
       });
       setResults([]); // Clear previous results
       if (!isContinuousInput) {
-        setIsAddPlayerFormVisible(false); // Hide form after adding
+        setIsNewPlayerFormVisible(false); // Hide form after adding
       }
     } else {
       alert('Please enter a valid name and at least one positive march time.');
@@ -389,6 +383,8 @@ export default function Room() {
     t4: 'T4',
   };
 
+  const shouldShowAddPlayerForm = isNewPlayerFormVisible || players.length === 0;
+
   if (isLoading) {
     return (
       <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
@@ -440,7 +436,7 @@ export default function Room() {
         {copyFeedback && <span style={{ marginLeft: '10px', color: 'green', fontSize: '14px' }}>{copyFeedback}</span>}
       </h2>
 
-      {isAddPlayerFormVisible ? (
+      {shouldShowAddPlayerForm ? (
         <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
           <input
             type="text"
@@ -486,14 +482,14 @@ export default function Room() {
             Add Player
           </button>
           {players.length > 0 &&
-            <button onClick={() => setIsAddPlayerFormVisible(false)} style={{ padding: '8px 12px' }}>
+            <button onClick={() => setIsNewPlayerFormVisible(false)} style={{ padding: '8px 12px' }}>
               Cancel
             </button>
           }
         </div>
       ) : (
         <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <button onClick={() => setIsAddPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }} disabled={!isFirebaseConfigured}>
+          <button onClick={() => setIsNewPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }} disabled={!isFirebaseConfigured}>
             Add User
           </button>
         </div>
