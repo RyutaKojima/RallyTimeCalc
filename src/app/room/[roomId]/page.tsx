@@ -97,6 +97,14 @@ export default function Room() {
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
   });
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
@@ -614,7 +622,9 @@ export default function Room() {
 
       <div style={{ marginTop: '30px', borderTop: '2px solid #666', paddingTop: '20px' }}>
         <h2 style={{ textAlign: 'center' }}>Departure Time Calculator</h2>
-
+        <p style={{ textAlign: 'center' }}>
+          Current UTC Time: {currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}
+        </p>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
           <label htmlFor="rally-wait-time">Rally Waiting Time:</label>
           <select
