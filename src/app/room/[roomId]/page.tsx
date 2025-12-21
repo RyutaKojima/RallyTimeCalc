@@ -99,6 +99,7 @@ export default function Room() {
   });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [minutesFromNow, setMinutesFromNow] = useState('');
+  const [secondsFromNow, setSecondsFromNow] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -339,25 +340,22 @@ export default function Room() {
 
   const handleSetArrivalTimeFromNow = async () => {
     if (!db || !roomId) return;
-    const minutes = parseInt(minutesFromNow, 10);
-    if (isNaN(minutes) || minutes < 0) {
-      alert('Please enter a valid number of minutes.');
+    const minutes = parseInt(minutesFromNow, 10) || 0;
+    const seconds = parseInt(secondsFromNow, 10) || 0;
+
+    if ((isNaN(minutes) && isNaN(seconds)) || (minutes < 0 || seconds < 0)) {
+      alert('Please enter a valid number of minutes and/or seconds.');
       return;
     }
 
     const now = new Date();
-    // If seconds are not 0, round up to the next minute.
-    if (now.getSeconds() > 0) {
-      now.setMinutes(now.getMinutes() + 1);
-      now.setSeconds(0);
-    }
-
     now.setMinutes(now.getMinutes() + minutes);
+    now.setSeconds(now.getSeconds() + seconds);
 
     const newArrivalTime = {
       hour: String(now.getHours()).padStart(2, '0'),
       min: String(now.getMinutes()).padStart(2, '0'),
-      sec: '00',
+      sec: String(now.getSeconds()).padStart(2, '0'),
     };
 
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
@@ -704,11 +702,18 @@ export default function Room() {
             type="number"
             value={minutesFromNow}
             onChange={(e) => setMinutesFromNow(e.target.value)}
-            placeholder="Minutes from now"
-            style={{ padding: '8px', width: '150px' }}
+            placeholder="Minutes"
+            style={{ padding: '8px', width: '80px' }}
+          />
+          <input
+            type="number"
+            value={secondsFromNow}
+            onChange={(e) => setSecondsFromNow(e.target.value)}
+            placeholder="Seconds"
+            style={{ padding: '8px', width: '80px' }}
           />
           <button onClick={handleSetArrivalTimeFromNow} style={{ padding: '8px 12px' }}>
-            Set
+            Set from now
           </button>
         </div>
 
