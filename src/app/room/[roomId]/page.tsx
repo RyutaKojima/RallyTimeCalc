@@ -98,6 +98,8 @@ export default function Room() {
     arrivalTime: { hour: '', min: '', sec: '' },
   });
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [minutesFromNow, setMinutesFromNow] = useState('');
+  const [secondsFromNow, setSecondsFromNow] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -334,6 +336,30 @@ export default function Room() {
     if (!db || !roomId) return;
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
     await setDoc(roomDocRef, { rallyWaitTime: value }, { merge: true });
+  };
+
+  const handleSetArrivalTimeFromNow = async () => {
+    if (!db || !roomId) return;
+    const minutes = parseInt(minutesFromNow, 10) || 0;
+    const seconds = parseInt(secondsFromNow, 10) || 0;
+
+    if ((isNaN(minutes) && isNaN(seconds)) || (minutes < 0 || seconds < 0)) {
+      alert('Please enter a valid number of minutes and/or seconds.');
+      return;
+    }
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + minutes);
+    now.setSeconds(now.getSeconds() + seconds);
+
+    const newArrivalTime = {
+      hour: String(now.getHours()).padStart(2, '0'),
+      min: String(now.getMinutes()).padStart(2, '0'),
+      sec: String(now.getSeconds()).padStart(2, '0'),
+    };
+
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    await setDoc(roomDocRef, { arrivalTime: newArrivalTime }, { merge: true });
   };
 
   const calculateDepartureTimes = () => {
@@ -670,6 +696,27 @@ export default function Room() {
             style={{ padding: '8px', width: '60px' }}
           />
         </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
+          <input
+            type="number"
+            value={minutesFromNow}
+            onChange={(e) => setMinutesFromNow(e.target.value)}
+            placeholder="Minutes"
+            style={{ padding: '8px', width: '80px' }}
+          />
+          <input
+            type="number"
+            value={secondsFromNow}
+            onChange={(e) => setSecondsFromNow(e.target.value)}
+            placeholder="Seconds"
+            style={{ padding: '8px', width: '80px' }}
+          />
+          <button onClick={handleSetArrivalTimeFromNow} style={{ padding: '8px 12px' }}>
+            Set from now
+          </button>
+        </div>
+
         <div style={{textAlign: 'center'}}>
           <button onClick={calculateDepartureTimes} style={{ padding: '10px 20px', fontSize: '16px' }}>
             Calculate Departure Times
