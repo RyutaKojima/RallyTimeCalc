@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '../../../lib/firebase'; // Adjust path as needed
+import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, Firestore } from 'firebase/firestore';
 
 
@@ -118,42 +118,46 @@ export default function Room() {
 
   // Set up Firestore listener
   useEffect(() => {
-    setIsFirebaseConfigured(!!db);
+    firebaseInitPromise.then(() => {
+      setIsFirebaseConfigured(!!db);
 
-    if (!db || !roomId) return;
+      if (!db || !roomId) return;
 
-    const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
-    const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
-      const playersData: Player[] = [];
-      querySnapshot.forEach((doc) => {
-        playersData.push({ id: doc.id, ...doc.data() } as Player);
+      const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
+      const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
+        const playersData: Player[] = [];
+        querySnapshot.forEach((doc) => {
+          playersData.push({ id: doc.id, ...doc.data() } as Player);
+        });
+        setPlayers(playersData);
       });
-      setPlayers(playersData);
-    });
 
-    return () => unsubscribe(); // Clean up listener
+      return () => unsubscribe(); // Clean up listener
+    })
   }, [roomId]);
 
   // Set up Firestore listener for room data
   useEffect(() => {
-    if (!db || !roomId) return;
+    firebaseInitPromise.then(() => {
+      if (!db || !roomId) return;
 
-    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
-    const unsubscribe = onSnapshot(roomDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setRoomData(docSnap.data() as RoomData);
-      } else {
-        // If the room document doesn't exist, create it with default values
-        const defaultRoomData: RoomData = {
-          rallyWaitTime: 0,
-          arrivalTime: { hour: '', min: '', sec: '' }
-        };
-        // Use setDoc to create the document
-        setDoc(roomDocRef, defaultRoomData);
-      }
+      const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+      const unsubscribe = onSnapshot(roomDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setRoomData(docSnap.data() as RoomData);
+        } else {
+          // If the room document doesn't exist, create it with default values
+          const defaultRoomData: RoomData = {
+            rallyWaitTime: 0,
+            arrivalTime: { hour: '', min: '', sec: '' }
+          };
+          // Use setDoc to create the document
+          setDoc(roomDocRef, defaultRoomData);
+        }
+      });
+
+      return () => unsubscribe(); // Clean up the listener
     });
-
-    return () => unsubscribe(); // Clean up the listener
   }, [roomId]);
 
   const addPlayer = async () => {

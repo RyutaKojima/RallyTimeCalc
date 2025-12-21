@@ -1,5 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, signInAnonymously, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,31 +11,49 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Function to check if the config values are valid
 const isConfigValid = (config: typeof firebaseConfig): boolean => {
   return Object.values(config).every(value => value && !value.includes('your-'));
 };
 
 let db: Firestore | null = null;
+let auth: Auth | null = null;
 
-if (isConfigValid(firebaseConfig)) {
-  if (!getApps().length) {
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+const initializeFirebase = async () => {
+  if (isConfigValid(firebaseConfig)) {
+    let app: FirebaseApp;
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
+
+    auth = getAuth(app);
+    try {
+      await signInAnonymously(auth);
+      console.log("Signed in anonymously");
+      db = getFirestore(app);
+    } catch (error) {
+      console.error("Anonymous sign-in failed:", error);
+      console.warn(`
+        -----------------------------------------------------------------
+        Firebase Anonymous sign-in failed.
+        Database functionality will be disabled.
+        -----------------------------------------------------------------
+      `);
+    }
   } else {
-    // If the app is already initialized, get the existing instance
-    const app = getApps()[0];
-    db = getFirestore(app);
+    console.warn(`
+      -----------------------------------------------------------------
+      Firebase is not configured correctly.
+      Please make sure all environment variables in '.env.local'
+      are set with your actual Firebase project credentials.
+      Database functionality will be disabled.
+      -----------------------------------------------------------------
+    `);
   }
-} else {
-  console.warn(`
-    -----------------------------------------------------------------
-    Firebase is not configured correctly.
-    Please make sure all environment variables in '.env.local'
-    are set with your actual Firebase project credentials.
-    Database functionality will be disabled.
-    -----------------------------------------------------------------
-  `);
-}
+};
 
-export { db };
+// Initialize Firebase immediately, but the export relies on the async function
+const firebaseInitPromise = initializeFirebase();
+
+export { db, auth, firebaseInitPromise };
