@@ -698,7 +698,7 @@ export default function Room() {
                       .filter(category => player.departures[category] !== undefined)
                       .map(category => (
                         <li key={category}>
-                          {timeLabels[category]}: <strong>{player.departures[category]}</strong>
+                          {timeLabels[category]}: <strong style={{ color: category === selectedTargetForCopy ? 'red' : 'inherit' }}>{player.departures[category]}</strong>
                         </li>
                       ))}
                   </ul>
