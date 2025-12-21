@@ -98,6 +98,7 @@ export default function Room() {
     arrivalTime: { hour: '', min: '', sec: '' },
   });
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [minutesFromNow, setMinutesFromNow] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -334,6 +335,33 @@ export default function Room() {
     if (!db || !roomId) return;
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
     await setDoc(roomDocRef, { rallyWaitTime: value }, { merge: true });
+  };
+
+  const handleSetArrivalTimeFromNow = async () => {
+    if (!db || !roomId) return;
+    const minutes = parseInt(minutesFromNow, 10);
+    if (isNaN(minutes) || minutes < 0) {
+      alert('Please enter a valid number of minutes.');
+      return;
+    }
+
+    const now = new Date();
+    // If seconds are not 0, round up to the next minute.
+    if (now.getSeconds() > 0) {
+      now.setMinutes(now.getMinutes() + 1);
+      now.setSeconds(0);
+    }
+
+    now.setMinutes(now.getMinutes() + minutes);
+
+    const newArrivalTime = {
+      hour: String(now.getHours()).padStart(2, '0'),
+      min: String(now.getMinutes()).padStart(2, '0'),
+      sec: '00',
+    };
+
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    await setDoc(roomDocRef, { arrivalTime: newArrivalTime }, { merge: true });
   };
 
   const calculateDepartureTimes = () => {
@@ -670,6 +698,20 @@ export default function Room() {
             style={{ padding: '8px', width: '60px' }}
           />
         </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
+          <input
+            type="number"
+            value={minutesFromNow}
+            onChange={(e) => setMinutesFromNow(e.target.value)}
+            placeholder="Minutes from now"
+            style={{ padding: '8px', width: '150px' }}
+          />
+          <button onClick={handleSetArrivalTimeFromNow} style={{ padding: '8px 12px' }}>
+            Set
+          </button>
+        </div>
+
         <div style={{textAlign: 'center'}}>
           <button onClick={calculateDepartureTimes} style={{ padding: '10px 20px', fontSize: '16px' }}>
             Calculate Departure Times
