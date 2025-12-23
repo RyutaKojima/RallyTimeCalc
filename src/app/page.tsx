@@ -12,17 +12,18 @@ export default function Home() {
   };
 
   return (
-    <main style={{ fontFamily: 'Arial, sans-serif', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div>
-        <h1 style={{ textAlign: 'center' }}>Welcome to March Time Calculator</h1>
-        <p style={{ textAlign: 'center', margin: '20px 0' }}>
+    <main className="flex items-center justify-center h-screen bg-gray-100 font-sans">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">Welcome to March Time Calculator</h1>
+        <p className="text-lg text-gray-600 mb-8">
           Create a room to share and synchronize march times with your team.
         </p>
-        <div style={{ textAlign: 'center' }}>
-          <button onClick={createRoom} style={{ padding: '12px 24px', fontSize: '18px', cursor: 'pointer' }}>
-            Create a New Room
-          </button>
-        </div>
+        <button
+          onClick={createRoom}
+          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
+        >
+          Create a New Room
+        </button>
       </div>
     </main>
   );
