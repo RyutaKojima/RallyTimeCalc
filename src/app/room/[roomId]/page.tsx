@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { db } from '../../../lib/firebase'; // Adjust path as needed
-import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, getDoc, Firestore } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore } from 'firebase/firestore';
 
 
 const parseTimeToSeconds = (time: TimeInput): number => {
@@ -65,6 +65,8 @@ const timeCategories: (keyof MarchTimes)[] = ['castle', 't1', 't2', 't3', 't4'];
 
 export default function Room() {
   const params = useParams();
+  const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
+
   const [players, setPlayers] = useState<Player[]>([]);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerTimes, setNewPlayerTimes] = useState<PlayerTimeInput>({
@@ -87,9 +89,9 @@ export default function Room() {
   });
   const [isNewPlayerFormVisible, setIsNewPlayerFormVisible] = useState(false);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
-  const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFirebaseConfigured] = useState(!!db);
+  const [roomId] = useState<string | null>(currentRoomId);
+  const [isLoading] = useState(!currentRoomId);
   const [copyFeedback, setCopyFeedback] = useState('');
   const [copyDepartureFeedback, setCopyDepartureFeedback] = useState('');
   const [selectedTargetForCopy, setSelectedTargetForCopy] = useState<keyof MarchTimes>('castle');
@@ -108,18 +110,8 @@ export default function Room() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
-    if (currentRoomId) {
-      setRoomId(currentRoomId);
-      setIsLoading(false);
-    }
-  }, [params.roomId]);
-
   // Set up Firestore listener
   useEffect(() => {
-    setIsFirebaseConfigured(!!db);
-
     if (!db || !roomId) return;
 
     const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
@@ -436,7 +428,7 @@ export default function Room() {
         <div className="p-5 bg-red-100 border border-red-400 rounded-lg">
           <h1 className="text-2xl font-bold text-red-800">Configuration Error</h1>
           <p className="mt-2 text-red-700">Firebase is not configured correctly. Please check your environment variables.</p>
-          <p className="mt-1 text-sm text-red-600">The application's database functionality is currently disabled.</p>
+          <p className="mt-1 text-sm text-red-600">The application&apos;s database functionality is currently disabled.</p>
         </div>
       </main>
     );
@@ -522,7 +514,7 @@ export default function Room() {
                   </button>
                 }
                 <button onClick={addPlayer} disabled={!isFirebaseConfigured} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300">
-                  Add Player
+                  Save
                 </button>
               </div>
             </div>
@@ -530,7 +522,7 @@ export default function Room() {
         ) : (
           <div className="mb-6 text-center">
             <button onClick={() => setIsNewPlayerFormVisible(true)} disabled={!isFirebaseConfigured} className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 disabled:bg-blue-300">
-              Add User
+              Add Player
             </button>
           </div>
         )}
