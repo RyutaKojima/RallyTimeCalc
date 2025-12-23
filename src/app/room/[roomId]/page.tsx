@@ -421,122 +421,129 @@ export default function Room() {
 
   if (isLoading) {
     return (
-      <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
-        <p>Loading...</p>
+      <main className="flex items-center justify-center h-screen font-sans bg-gray-100">
+        <p className="text-lg text-gray-600">Loading...</p>
       </main>
     );
   }
 
   if (!isFirebaseConfigured) {
     return (
-      <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>
-          Room ID: <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>{roomId}</code>
+      <main className="max-w-xl p-5 mx-auto font-sans text-center">
+        <h2 className="flex items-center justify-center mb-5 text-xl">
+          Room ID: <code className="px-2 py-1 ml-2 bg-gray-200 rounded">{roomId}</code>
         </h2>
-        <div style={{ padding: '20px', background: '#ffebee', border: '1px solid #ef5350', borderRadius: '4px' }}>
-          <h1 style={{ color: '#c62828' }}>Configuration Error</h1>
-          <p>Firebase is not configured correctly. Please check your `.env.local` file and ensure all the environment variables are set with your project's credentials.</p>
-          <p>The application's database functionality is currently disabled.</p>
+        <div className="p-5 bg-red-100 border border-red-400 rounded-lg">
+          <h1 className="text-2xl font-bold text-red-800">Configuration Error</h1>
+          <p className="mt-2 text-red-700">Firebase is not configured correctly. Please check your environment variables.</p>
+          <p className="mt-1 text-sm text-red-600">The application's database functionality is currently disabled.</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px' }}>
-      <h1 style={{ textAlign: 'center' }}>March Time Calculator</h1>
-      <h2 style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        Room ID:
-        <code style={{ background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '10px', marginRight: '5px' }}>
-          {roomId}
-        </code>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ cursor: 'pointer' }}
-          onClick={handleCopy}
-          data-testid="copy-icon"
-        >
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        {copyFeedback && <span style={{ marginLeft: '10px', color: 'green', fontSize: '14px' }}>{copyFeedback}</span>}
-      </h2>
+    <main className="min-h-screen p-4 mx-auto font-sans text-gray-800 bg-gray-100 md:max-w-4xl md:p-8">
+      <header className="text-center">
+        <h1 className="text-4xl font-bold">March Time Calculator</h1>
+        <div className="flex items-center justify-center mt-4 text-lg">
+          <h2 className="font-semibold">Room ID:</h2>
+          <code className="px-3 py-1 ml-2 text-base font-mono bg-gray-200 rounded-md">{roomId}</code>
+          <button onClick={handleCopy} className="p-2 ml-2 text-gray-500 rounded-full hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Copy Room ID">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              data-testid="copy-icon"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          {copyFeedback && <span className="ml-3 text-sm text-green-600">{copyFeedback}</span>}
+        </div>
+      </header>
 
-      {shouldShowAddPlayerForm ? (
-        <div style={{ marginBottom: '20px', border: '1px solid #ccc', padding: '15px' }}>
-          <input
-            type="text"
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-            placeholder="Player Name"
-            style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
-          />
-          {timeCategories.map((key) => (
-            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
-              <label htmlFor={`new-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
-              <input
-                id={`new-${key}-min`}
-                type="number"
-                value={newPlayerTimes[key as keyof typeof newPlayerTimes].min}
-                onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'min')}
-                placeholder="Minutes"
-                style={{ padding: '8px', width: '80px' }}
-              />
-              <span>:</span>
-              <input
-                id={`new-${key}-sec`}
-                type="number"
-                value={newPlayerTimes[key as keyof typeof newPlayerTimes].sec}
-                onChange={(e) => handleNewTimeChange(key as keyof typeof newPlayerTimes, e.target.value, 'sec')}
-                placeholder="Seconds"
-                style={{ padding: '8px', width: '80px' }}
-              />
-            </div>
-          ))}
-          <div style={{ margin: '10px 0' }}>
+      <section className="mt-8">
+        {shouldShowAddPlayerForm ? (
+          <div className="p-6 mb-6 bg-white border border-gray-200 rounded-lg shadow-md">
             <input
-              type="checkbox"
-              id="continuous-input"
-              checked={isContinuousInput}
-              onChange={(e) => setIsContinuousInput(e.target.checked)}
+              type="text"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="Player Name"
+              className="w-full px-3 py-2 mb-4 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <label htmlFor="continuous-input" style={{ marginLeft: '5px' }}>
-              Continuous Input
-            </label>
+            <div className="space-y-3">
+              {timeCategories.map((key) => (
+                <div key={key} className="grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2">
+                  <label htmlFor={`new-${key}-min`} className="text-right text-gray-600">{timeLabels[key]}</label>
+                  <input
+                    id={`new-${key}-min`}
+                    type="number"
+                    value={newPlayerTimes[key].min}
+                    onChange={(e) => handleNewTimeChange(key, e.target.value, 'min')}
+                    placeholder="Min"
+                    className="w-full px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="font-bold text-center">:</span>
+                  <input
+                    id={`new-${key}-sec`}
+                    type="number"
+                    value={newPlayerTimes[key].sec}
+                    onChange={(e) => handleNewTimeChange(key, e.target.value, 'sec')}
+                    placeholder="Sec"
+                    className="w-full px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between mt-5">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="continuous-input"
+                  checked={isContinuousInput}
+                  onChange={(e) => setIsContinuousInput(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="continuous-input" className="ml-2 text-sm text-gray-700">Continuous Input</label>
+              </div>
+              <div className="flex gap-2">
+                {players.length > 0 &&
+                  <button onClick={() => setIsNewPlayerFormVisible(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                    Cancel
+                  </button>
+                }
+                <button onClick={addPlayer} disabled={!isFirebaseConfigured} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300">
+                  Add Player
+                </button>
+              </div>
+            </div>
           </div>
-          <button onClick={addPlayer} style={{ padding: '8px 12px', marginRight: '5px' }} disabled={!isFirebaseConfigured}>
-            Add Player
-          </button>
-          {players.length > 0 &&
-            <button onClick={() => setIsNewPlayerFormVisible(false)} style={{ padding: '8px 12px' }}>
-              Cancel
-            </button>
-          }
-        </div>
-      ) : (
-        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-          <button onClick={() => setIsNewPlayerFormVisible(true)} style={{ padding: '10px 20px', fontSize: '16px' }} disabled={!isFirebaseConfigured}>
-            Add User
-          </button>
-        </div>
-      )}
-
-      <div>
-        <h2>Player List</h2>
-        {players.length === 0 ? (
-          <p>No players added yet.</p>
         ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <div className="mb-6 text-center">
+            <button onClick={() => setIsNewPlayerFormVisible(true)} disabled={!isFirebaseConfigured} className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 disabled:bg-blue-300">
+              Add User
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
+        <h2 className="mb-4 text-2xl font-semibold">Player List</h2>
+        {players.length === 0 ? (
+          <p className="text-gray-500">No players added yet.</p>
+        ) : (
+          <ul className="space-y-4">
             {players.map((player) => (
-              <li key={player.id} data-testid={`player-item-${player.name}`} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ccc' }}>
+              <li key={player.id} data-testid={`player-item-${player.name}`} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 {editingPlayerId === player.id ? (
                   <div>
                     <input
@@ -544,64 +551,66 @@ export default function Room() {
                       value={editingPlayerName}
                       onChange={(e) => setEditingPlayerName(e.target.value)}
                       placeholder="Player Name"
-                      style={{ padding: '8px', width: 'calc(100% - 18px)', marginBottom: '10px' }}
+                      className="w-full px-3 py-2 mb-4 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    {timeCategories.map((key) => (
-                      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
-                        <label htmlFor={`edit-${key}-min`} style={{ width: '80px', textAlign: 'right', marginRight: '5px' }}>{timeLabels[key as keyof MarchTimes]}</label>
-                        <input
-                          id={`edit-${key}-min`}
-                          type="number"
-                          value={editingPlayerTimes[key as keyof typeof editingPlayerTimes].min}
-                          onChange={(e) => handleEditingTimeChange(key as keyof typeof editingPlayerTimes, e.target.value, 'min')}
-                          placeholder="Minutes"
-                          style={{ padding: '5px', width: '80px' }}
-                        />
-                        <span>:</span>
-                        <input
-                          id={`edit-${key}-sec`}
-                          type="number"
-                          value={editingPlayerTimes[key as keyof typeof editingPlayerTimes].sec}
-                          onChange={(e) => handleEditingTimeChange(key as keyof typeof editingPlayerTimes, e.target.value, 'sec')}
-                          placeholder="Seconds"
-                          style={{ padding: '5px', width: '80px' }}
-                        />
-                      </div>
-                    ))}
-                    <div style={{ marginTop: '10px' }}>
-                      <button onClick={() => saveEditing(player.id)} style={{ padding: '5px 10px', marginRight: '5px' }} disabled={!isFirebaseConfigured}>
-                        Save
-                      </button>
-                      <button onClick={cancelEditing} style={{ padding: '5px 10px' }}>
+                    <div className="space-y-3">
+                      {timeCategories.map((key) => (
+                        <div key={key} className="grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2">
+                          <label htmlFor={`edit-${key}-min`} className="text-right text-gray-600">{timeLabels[key]}</label>
+                          <input
+                            id={`edit-${key}-min`}
+                            type="number"
+                            value={editingPlayerTimes[key].min}
+                            onChange={(e) => handleEditingTimeChange(key, e.target.value, 'min')}
+                            placeholder="Min"
+                            className="w-full px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="font-bold text-center">:</span>
+                          <input
+                            id={`edit-${key}-sec`}
+                            type="number"
+                            value={editingPlayerTimes[key].sec}
+                            onChange={(e) => handleEditingTimeChange(key, e.target.value, 'sec')}
+                            placeholder="Sec"
+                            className="w-full px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <button onClick={cancelEditing} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                         Cancel
+                      </button>
+                      <button onClick={() => saveEditing(player.id)} disabled={!isFirebaseConfigured} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300">
+                        Save
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <input
                         type="checkbox"
                         checked={player.enabled !== false}
                         onChange={(e) => handleTogglePlayerEnabled(player.id, e.target.checked)}
-                        style={{ marginRight: '10px' }}
+                        className="w-5 h-5 mr-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <div>
-                        <strong>{player.name}</strong>
-                        <ul style={{ listStyle: 'none', paddingLeft: '20px', fontSize: '0.9em', margin: 0 }}>
+                        <strong className="text-lg font-medium text-gray-900">{player.name}</strong>
+                        <ul className="mt-1 text-sm text-gray-600">
                           {timeCategories
                             .filter(category => player.times[category] > 0)
                             .map(category => (
-                              <li key={category}>{timeLabels[category]}: {formatTime(player.times[category])}</li>
+                              <li key={category}><span className="font-medium">{timeLabels[category]}:</span> {formatTime(player.times[category])}</li>
                             ))}
                         </ul>
                       </div>
                     </div>
-                    <div>
-                      <button onClick={() => startEditing(player)} style={{ padding: '5px 10px', marginRight: '5px' }}>
+                    <div className="flex gap-2">
+                      <button onClick={() => startEditing(player)} className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                         Edit
                       </button>
-                      <button onClick={() => removePlayer(player.id)} style={{ padding: '5px 10px', background: '#ffdddd', border: 'none', cursor: 'pointer' }} disabled={!isFirebaseConfigured}>
+                      <button onClick={() => removePlayer(player.id)} disabled={!isFirebaseConfigured} className="px-3 py-1 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 disabled:bg-red-300">
                         Remove
                       </button>
                     </div>
@@ -611,31 +620,31 @@ export default function Room() {
             ))}
           </ul>
         )}
-      </div>
+      </section>
 
       {players.length > 0 && (
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <button onClick={calculateDelays} style={{ padding: '10px 20px', fontSize: '16px' }}>
+        <div className="mt-6 text-center">
+          <button onClick={calculateDelays} className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700">
             Calculate Delays
           </button>
         </div>
       )}
 
       {results.length > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>Calculation Results</h2>
-          <p>To synchronize the arrival, players should depart with the following delays:</p>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+        <section className="p-6 mt-8 bg-white border border-gray-200 rounded-lg shadow-md">
+          <h2 className="mb-2 text-2xl font-semibold">Calculation Results</h2>
+          <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
+          <ul className="space-y-3">
             {results.map((result, index) => (
               Object.keys(result.delays).length > 0 && (
-                <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
-                  <strong>{result.name}:</strong>
-                  <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
+                <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
+                  <strong className="text-lg font-medium text-gray-900">{result.name}:</strong>
+                  <ul className="pl-5 mt-2 space-y-1 text-gray-700">
                     {timeCategories
                       .filter(category => result.delays[category] !== undefined)
                       .map(category => (
                         <li key={category}>
-                          {timeLabels[category]}: Wait for <strong>{formatTime(result.delays[category] as number)}</strong>
+                          {timeLabels[category]}: Wait for <strong className="font-semibold text-blue-600">{formatTime(result.delays[category] as number)}</strong>
                         </li>
                       ))}
                   </ul>
@@ -643,118 +652,125 @@ export default function Room() {
               )
             ))}
           </ul>
-        </div>
+        </section>
       )}
 
-      <div style={{ marginTop: '30px', borderTop: '2px solid #666', paddingTop: '20px' }}>
-        <h2 style={{ textAlign: 'center' }}>Departure Time Calculator</h2>
-        <p style={{ textAlign: 'center' }}>
-          Current UTC Time: {currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}
+      <section className="p-6 mt-8 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold text-center">Departure Time Calculator</h2>
+        <p className="mt-2 text-center text-gray-600">
+          Current UTC Time: <span className="font-mono">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-          <label htmlFor="rally-wait-time">Rally Waiting Time:</label>
-          <select
-            id="rally-wait-time"
-            value={roomData.rallyWaitTime || 0}
-            onChange={(e) => handleRallyWaitTimeChange(Number(e.target.value))}
-            style={{ padding: '8px' }}
-          >
-            <option value="0">None</option>
-            <option value="60">1 minute</option>
-            <option value="180">3 minutes</option>
-            <option value="300">5 minutes</option>
-            <option value="600">10 minutes</option>
-          </select>
+        <div className="grid gap-6 mt-6 md:grid-cols-2">
+          <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
+            <label htmlFor="rally-wait-time" className="mb-2 font-medium">Rally Waiting Time</label>
+            <select
+              id="rally-wait-time"
+              value={roomData.rallyWaitTime || 0}
+              onChange={(e) => handleRallyWaitTimeChange(Number(e.target.value))}
+              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="0">None</option>
+              <option value="60">1 minute</option>
+              <option value="180">3 minutes</option>
+              <option value="300">5 minutes</option>
+              <option value="600">10 minutes</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
+            <label className="mb-2 font-medium">Set Arrival Time from Now</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={minutesFromNow}
+                onChange={(e) => setMinutesFromNow(e.target.value)}
+                placeholder="Min"
+                className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                value={secondsFromNow}
+                onChange={(e) => setSecondsFromNow(e.target.value)}
+                placeholder="Sec"
+                className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button onClick={handleSetArrivalTimeFromNow} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                Set
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
-          <label htmlFor="arrival-hour">Arrival Time:</label>
-          <input
-            id="arrival-hour"
-            type="number"
-            value={roomData.arrivalTime?.hour || ''}
-            onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
-            placeholder="HH"
-            style={{ padding: '8px', width: '60px' }}
-          />
-          <span>:</span>
-          <input
-            id="arrival-min"
-            type="number"
-            value={roomData.arrivalTime?.min || ''}
-            onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
-            placeholder="MM"
-            style={{ padding: '8px', width: '60px' }}
-          />
-          <span>:</span>
-          <input
-            id="arrival-sec"
-            type="number"
-            value={roomData.arrivalTime?.sec || ''}
-            onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
-            placeholder="SS"
-            style={{ padding: '8px', width: '60px' }}
-          />
+        <div className="flex flex-col items-center justify-center gap-2 p-4 mt-4 bg-gray-50 rounded-lg">
+          <label htmlFor="arrival-hour" className="font-medium">Arrival Time (UTC)</label>
+          <div className="flex items-center gap-2">
+            <input
+              id="arrival-hour"
+              type="number"
+              value={roomData.arrivalTime?.hour || ''}
+              onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
+              placeholder="HH"
+              className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span>:</span>
+            <input
+              id="arrival-min"
+              type="number"
+              value={roomData.arrivalTime?.min || ''}
+              onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
+              placeholder="MM"
+              className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span>:</span>
+            <input
+              id="arrival-sec"
+              type="number"
+              value={roomData.arrivalTime?.sec || ''}
+              onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
+              placeholder="SS"
+              className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', marginBottom: '20px' }}>
-          <input
-            type="number"
-            value={minutesFromNow}
-            onChange={(e) => setMinutesFromNow(e.target.value)}
-            placeholder="Minutes"
-            style={{ padding: '8px', width: '80px' }}
-          />
-          <input
-            type="number"
-            value={secondsFromNow}
-            onChange={(e) => setSecondsFromNow(e.target.value)}
-            placeholder="Seconds"
-            style={{ padding: '8px', width: '80px' }}
-          />
-          <button onClick={handleSetArrivalTimeFromNow} style={{ padding: '8px 12px' }}>
-            Set from now
-          </button>
-        </div>
-
-        <div style={{textAlign: 'center'}}>
-          <button onClick={calculateDepartureTimes} style={{ padding: '10px 20px', fontSize: '16px' }}>
+        <div className="mt-6 text-center">
+          <button onClick={calculateDepartureTimes} className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700">
             Calculate Departure Times
           </button>
         </div>
 
         {departureTimes.length > 0 && (
-          <div style={{ marginTop: '20px' }}>
-            <h2>Departure Times</h2>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold text-center">Departure Times</h2>
+            <div className="flex items-center justify-center gap-2 mt-4">
               <select
                 data-testid="copy-target-select"
                 value={selectedTargetForCopy}
                 onChange={(e) => setSelectedTargetForCopy(e.target.value as keyof MarchTimes)}
-                style={{ padding: '8px' }}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {timeCategories.map(cat => (
                   <option key={cat} value={cat}>{timeLabels[cat]}</option>
                 ))}
               </select>
-              <button onClick={handleDepartureCopy} style={{ padding: '8px 12px' }}>
+              <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
                 Copy
               </button>
-              {copyDepartureFeedback && <span style={{ color: 'green', fontSize: '14px' }}>{copyDepartureFeedback}</span>}
+              {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
             </div>
-            <ul id="departure-times-list" style={{ listStyle: 'none', padding: 0 }}>
+            <ul id="departure-times-list" className="mt-4 space-y-3">
               {departureTimes.map((player, index) => (
-                <li key={index} style={{ padding: '10px', background: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }}>
-                  <strong>{player.name}:</strong>
-                  <ul style={{ listStyle: 'none', paddingLeft: '20px', marginTop: '5px' }}>
+                <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
+                  <strong className="text-lg font-medium text-gray-900">{player.name}:</strong>
+                  <ul className="pl-5 mt-2 space-y-1 text-gray-700">
                     {timeCategories
                       .filter(category => player.departures[category] !== undefined)
                       .map(category => (
                         <li
                           key={category}
-                          style={{ color: selectedTargetForCopy === category ? 'red' : 'inherit' }}
+                          className={selectedTargetForCopy === category ? 'text-red-600 font-bold' : ''}
                         >
-                          {timeLabels[category]}: <strong>{player.departures[category]}</strong>
+                          {timeLabels[category]}: <strong className="font-semibold">{player.departures[category]}</strong>
                         </li>
                       ))}
                   </ul>
@@ -763,7 +779,7 @@ export default function Room() {
             </ul>
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }

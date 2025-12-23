@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+@theme {
+  --content: "./src/**/*.{js,ts,jsx,tsx,mdx}";
+}
