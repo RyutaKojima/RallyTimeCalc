@@ -100,6 +100,7 @@ export default function Room() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [minutesFromNow, setMinutesFromNow] = useState('');
   const [secondsFromNow, setSecondsFromNow] = useState('');
+  const [isPlayerListOpen, setIsPlayerListOpen] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -537,15 +538,40 @@ export default function Room() {
       </section>
 
       <section className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-        <h2 className="mb-4 text-2xl font-semibold">Player List</h2>
-        {players.length === 0 ? (
-          <p className="text-gray-500">No players added yet.</p>
-        ) : (
-          <ul className="space-y-4">
-            {players.map((player) => (
-              <li key={player.id} data-testid={`player-item-${player.name}`} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                {editingPlayerId === player.id ? (
-                  <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold">Player List</h2>
+          <button
+            onClick={() => setIsPlayerListOpen(!isPlayerListOpen)}
+            className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-expanded={isPlayerListOpen}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform duration-200 ${isPlayerListOpen ? 'rotate-180' : ''
+                }`}
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+        {isPlayerListOpen && (
+          <div>
+            {players.length === 0 ? (
+              <p className="text-gray-500">No players added yet.</p>
+            ) : (
+              <ul className="space-y-4">
+                {players.map((player) => (
+                  <li key={player.id} data-testid={`player-item-${player.name}`} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    {editingPlayerId === player.id ? (
+                      <div>
                     <input
                       type="text"
                       value={editingPlayerName}
@@ -619,6 +645,8 @@ export default function Room() {
               </li>
             ))}
           </ul>
+        )}
+          </div>
         )}
       </section>
 
