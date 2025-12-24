@@ -669,19 +669,36 @@ export default function Room() {
       </section>
 
       {players.length > 0 && (
-        <div className="flex items-center justify-center gap-2 my-4">
-          <label htmlFor="copy-target-select" className="font-medium">Target:</label>
-          <select
-            id="copy-target-select"
-            data-testid="copy-target-select"
-            value={roomData.selectedTarget || 'castle'}
-            onChange={(e) => handleTargetChange(e.target.value as keyof MarchTimes)}
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {timeCategories.map(cat => (
-              <option key={cat} value={cat}>{timeLabels[cat]}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center justify-center gap-4 my-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="copy-target-select" className="font-medium">Target:</label>
+            <select
+              id="copy-target-select"
+              data-testid="copy-target-select"
+              value={roomData.selectedTarget || 'castle'}
+              onChange={(e) => handleTargetChange(e.target.value as keyof MarchTimes)}
+              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {timeCategories.map(cat => (
+                <option key={cat} value={cat}>{timeLabels[cat]}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="rally-wait-time" className="font-medium">Rally Waiting Time</label>
+            <select
+              id="rally-wait-time"
+              value={roomData.rallyWaitTime || 0}
+              onChange={(e) => handleRallyWaitTimeChange(Number(e.target.value))}
+              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="0">None</option>
+              <option value="60">1 minute</option>
+              <option value="180">3 minutes</option>
+              <option value="300">5 minutes</option>
+              <option value="600">10 minutes</option>
+            </select>
+          </div>
         </div>
       )}
 
@@ -723,23 +740,7 @@ export default function Room() {
         <p className="mt-2 text-center text-gray-600">
           Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
         </p>
-        <div className="grid gap-6 mt-6 md:grid-cols-2">
-          <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
-            <label htmlFor="rally-wait-time" className="mb-2 font-medium">Rally Waiting Time</label>
-            <select
-              id="rally-wait-time"
-              value={roomData.rallyWaitTime || 0}
-              onChange={(e) => handleRallyWaitTimeChange(Number(e.target.value))}
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="0">None</option>
-              <option value="60">1 minute</option>
-              <option value="180">3 minutes</option>
-              <option value="300">5 minutes</option>
-              <option value="600">10 minutes</option>
-            </select>
-          </div>
-
+        <div className="grid gap-6 mt-6 md:grid-cols-1">
           <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
             <label className="mb-2 font-medium">Set Arrival Time from Now</label>
             <div className="flex items-center gap-2">
