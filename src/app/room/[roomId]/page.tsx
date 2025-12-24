@@ -741,23 +741,24 @@ export default function Room() {
           {isResultsOpen && (
             <div>
               <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
-              <ul className="space-y-3">
-                {results.map((result, index) => (
-                  Object.keys(result.delays).length > 0 && (
-                    <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
-                      <strong className="text-lg font-medium text-gray-900">{result.name}:</strong>
-                      <ul className="pl-5 mt-2 space-y-1 text-gray-700">
-                        {timeCategories
-                          .filter(category => result.delays[category] !== undefined)
-                          .map(category => (
-                            <li key={category}>
-                              {timeLabels[category]}: Wait for <strong className="font-semibold text-blue-600">{formatTime(result.delays[category] as number)}</strong>
-                            </li>
-                          ))}
-                      </ul>
+              <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
+                {results
+                  .filter(result => result.delays[roomData.selectedTarget] !== undefined)
+                  .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0))
+                  .map((result, index) => (
+                    <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium text-gray-800">{result.name}</span>
+                      {result.delays[roomData.selectedTarget]! > 0 ? (
+                        <span className="font-mono text-lg font-bold text-blue-600">
+                          Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
+                        </span>
+                      ) : (
+                        <span className="font-mono text-lg font-bold text-green-600">
+                          Depart Now
+                        </span>
+                      )}
                     </li>
-                  )
-                ))}
+                  ))}
               </ul>
             </div>
           )}
