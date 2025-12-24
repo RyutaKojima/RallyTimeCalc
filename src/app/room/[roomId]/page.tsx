@@ -103,6 +103,8 @@ export default function Room() {
   const [minutesFromNow, setMinutesFromNow] = useState('');
   const [secondsFromNow, setSecondsFromNow] = useState('');
   const [isPlayerListOpen, setIsPlayerListOpen] = useState(true);
+  const [isResultsOpen, setIsResultsOpen] = useState(true);
+  const [isDepartureTimesOpen, setIsDepartureTimesOpen] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -712,26 +714,53 @@ export default function Room() {
 
       {results.length > 0 && (
         <section className="p-6 mt-8 bg-white border border-gray-200 rounded-lg shadow-md">
-          <h2 className="mb-2 text-2xl font-semibold">Calculation Results</h2>
-          <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
-          <ul className="space-y-3">
-            {results.map((result, index) => (
-              Object.keys(result.delays).length > 0 && (
-                <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
-                  <strong className="text-lg font-medium text-gray-900">{result.name}:</strong>
-                  <ul className="pl-5 mt-2 space-y-1 text-gray-700">
-                    {timeCategories
-                      .filter(category => result.delays[category] !== undefined)
-                      .map(category => (
-                        <li key={category}>
-                          {timeLabels[category]}: Wait for <strong className="font-semibold text-blue-600">{formatTime(result.delays[category] as number)}</strong>
-                        </li>
-                      ))}
-                  </ul>
-                </li>
-              )
-            ))}
-          </ul>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Calculation Results</h2>
+            <button
+              onClick={() => setIsResultsOpen(!isResultsOpen)}
+              className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-expanded={isResultsOpen}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform duration-200 ${isResultsOpen ? 'rotate-180' : ''
+                  }`}
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+          {isResultsOpen && (
+            <div>
+              <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
+              <ul className="space-y-3">
+                {results.map((result, index) => (
+                  Object.keys(result.delays).length > 0 && (
+                    <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
+                      <strong className="text-lg font-medium text-gray-900">{result.name}:</strong>
+                      <ul className="pl-5 mt-2 space-y-1 text-gray-700">
+                        {timeCategories
+                          .filter(category => result.delays[category] !== undefined)
+                          .map(category => (
+                            <li key={category}>
+                              {timeLabels[category]}: Wait for <strong className="font-semibold text-blue-600">{formatTime(result.delays[category] as number)}</strong>
+                            </li>
+                          ))}
+                      </ul>
+                    </li>
+                  )
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 
@@ -805,24 +834,51 @@ export default function Room() {
 
         {departureTimes.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-2xl font-semibold text-center">Departure Times</h2>
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                Copy
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Departure Times</h2>
+              <button
+                onClick={() => setIsDepartureTimesOpen(!isDepartureTimesOpen)}
+                className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-expanded={isDepartureTimesOpen}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-transform duration-200 ${isDepartureTimesOpen ? 'rotate-180' : ''
+                    }`}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
               </button>
-              {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
             </div>
-            <ul id="departure-times-list" className="mt-4 space-y-2">
-              {departureTimes
-                .filter(player => player.departures[roomData.selectedTarget])
-                .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
-                .map((player, index) => (
-                  <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium text-gray-800">{player.name}</span>
-                    <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
-                  </li>
-              ))}
-            </ul>
+            {isDepartureTimesOpen && (
+              <div>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    Copy
+                  </button>
+                  {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
+                </div>
+                <ul id="departure-times-list" className="mt-4 space-y-2">
+                  {departureTimes
+                    .filter(player => player.departures[roomData.selectedTarget])
+                    .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
+                    .map((player, index) => (
+                      <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium text-gray-800">{player.name}</span>
+                        <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </section>
