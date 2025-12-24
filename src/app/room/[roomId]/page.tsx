@@ -661,6 +661,23 @@ export default function Room() {
       </section>
 
       {players.length > 0 && (
+        <div className="flex items-center justify-center gap-2 my-4">
+          <label htmlFor="copy-target-select" className="font-medium">Target:</label>
+          <select
+            id="copy-target-select"
+            data-testid="copy-target-select"
+            value={selectedTargetForCopy}
+            onChange={(e) => setSelectedTargetForCopy(e.target.value as keyof MarchTimes)}
+            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {timeCategories.map(cat => (
+              <option key={cat} value={cat}>{timeLabels[cat]}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {players.length > 0 && (
         <div className="mt-6 text-center">
           <button onClick={calculateDelays} className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700">
             Calculate Delays
@@ -781,16 +798,6 @@ export default function Room() {
           <div className="mt-8">
             <h2 className="text-2xl font-semibold text-center">Departure Times</h2>
             <div className="flex items-center justify-center gap-2 mt-4">
-              <select
-                data-testid="copy-target-select"
-                value={selectedTargetForCopy}
-                onChange={(e) => setSelectedTargetForCopy(e.target.value as keyof MarchTimes)}
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {timeCategories.map(cat => (
-                  <option key={cat} value={cat}>{timeLabels[cat]}</option>
-                ))}
-              </select>
               <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
                 Copy
               </button>
