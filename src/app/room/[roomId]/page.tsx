@@ -57,6 +57,7 @@ interface DepartureResult {
 interface RoomData {
   rallyWaitTime: number;
   arrivalTime: ArrivalTimeInput;
+  selectedTarget: keyof MarchTimes;
 }
 
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
@@ -93,10 +94,10 @@ export default function Room() {
   const [isLoading, setIsLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState('');
   const [copyDepartureFeedback, setCopyDepartureFeedback] = useState('');
-  const [selectedTargetForCopy, setSelectedTargetForCopy] = useState<keyof MarchTimes>('castle');
   const [roomData, setRoomData] = useState<RoomData>({
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
+    selectedTarget: 'castle',
   });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [minutesFromNow, setMinutesFromNow] = useState('');
@@ -157,7 +158,8 @@ export default function Room() {
         // If the room document doesn't exist, create it with default values
         const defaultRoomData: RoomData = {
           rallyWaitTime: 0,
-          arrivalTime: { hour: '', min: '', sec: '' }
+          arrivalTime: { hour: '', min: '', sec: '' },
+          selectedTarget: 'castle'
         };
         // Use setDoc to create the document
         setDoc(roomDocRef, defaultRoomData);
@@ -264,7 +266,7 @@ export default function Room() {
   const handleDepartureCopy = () => {
     if (departureTimes.length === 0) return;
 
-    const target = selectedTargetForCopy;
+    const target = roomData.selectedTarget;
     let copyText = `${timeLabels[target]} Departure Times:\n`;
 
     const sortedTimes = [...departureTimes]
@@ -347,6 +349,12 @@ export default function Room() {
     if (!db || !roomId) return;
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
     await setDoc(roomDocRef, { rallyWaitTime: value }, { merge: true });
+  };
+
+  const handleTargetChange = async (value: keyof MarchTimes) => {
+    if (!db || !roomId) return;
+    const roomDocRef = doc(db as Firestore, 'rooms', roomId);
+    await setDoc(roomDocRef, { selectedTarget: value }, { merge: true });
   };
 
   const handleSetArrivalTimeFromNow = async () => {
@@ -666,8 +674,8 @@ export default function Room() {
           <select
             id="copy-target-select"
             data-testid="copy-target-select"
-            value={selectedTargetForCopy}
-            onChange={(e) => setSelectedTargetForCopy(e.target.value as keyof MarchTimes)}
+            value={roomData.selectedTarget || 'castle'}
+            onChange={(e) => handleTargetChange(e.target.value as keyof MarchTimes)}
             className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {timeCategories.map(cat => (
@@ -805,12 +813,12 @@ export default function Room() {
             </div>
             <ul id="departure-times-list" className="mt-4 space-y-2">
               {departureTimes
-                .filter(player => player.departures[selectedTargetForCopy])
-                .sort((a, b) => a.departures[selectedTargetForCopy].localeCompare(b.departures[selectedTargetForCopy]))
+                .filter(player => player.departures[roomData.selectedTarget])
+                .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
                 .map((player, index) => (
                   <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span className="font-medium text-gray-800">{player.name}</span>
-                    <span className="font-mono text-lg font-bold text-blue-600">{player.departures[selectedTargetForCopy]}</span>
+                    <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
                   </li>
               ))}
             </ul>
