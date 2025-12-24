@@ -686,7 +686,7 @@ export default function Room() {
       <section className="p-6 mt-8 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-center">Departure Time Calculator</h2>
         <p className="mt-2 text-center text-gray-600">
-          Current UTC Time: <span className="font-mono">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
+          Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
         </p>
         <div className="grid gap-6 mt-6 md:grid-cols-2">
           <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
