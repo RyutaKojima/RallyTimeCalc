@@ -1,5 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, signInAnonymously, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,31 +11,48 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Function to check if the config values are valid
 const isConfigValid = (config: typeof firebaseConfig): boolean => {
   return Object.values(config).every(value => value && !value.includes('your-'));
 };
 
+let app: FirebaseApp;
+let auth: Auth;
 let db: Firestore | null = null;
+let firebaseInitPromise: Promise<{ auth: Auth; db: Firestore } | null>;
 
 if (isConfigValid(firebaseConfig)) {
   if (!getApps().length) {
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    app = initializeApp(firebaseConfig);
   } else {
-    // If the app is already initialized, get the existing instance
-    const app = getApps()[0];
-    db = getFirestore(app);
+    app = getApps()[0];
   }
+  auth = getAuth(app);
+  db = getFirestore(app);
+
+  firebaseInitPromise = new Promise((resolve) => {
+    signInAnonymously(auth)
+      .then(() => {
+        if (db) {
+          resolve({ auth, db });
+        } else {
+          // This case should not happen if setup is correct
+          resolve(null);
+        }
+      })
+      .catch((error) => {
+        console.error("Firebase anonymous sign-in failed:", error);
+        resolve(null);
+      });
+  });
+
 } else {
   console.warn(`
     -----------------------------------------------------------------
     Firebase is not configured correctly.
-    Please make sure all environment variables in '.env.local'
-    are set with your actual Firebase project credentials.
     Database functionality will be disabled.
     -----------------------------------------------------------------
   `);
+  firebaseInitPromise = Promise.resolve(null);
 }
 
-export { db };
+export { db, auth, firebaseInitPromise };

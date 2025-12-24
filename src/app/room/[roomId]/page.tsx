@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { db } from '../../../lib/firebase'; // Adjust path as needed
+import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore } from 'firebase/firestore';
 
 
@@ -88,6 +88,7 @@ export default function Room() {
   const [isNewPlayerFormVisible, setIsNewPlayerFormVisible] = useState(false);
   const [isContinuousInput, setIsContinuousInput] = useState(false);
   const [isFirebaseConfigured, setIsFirebaseConfigured] = useState(false);
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState('');
@@ -110,18 +111,27 @@ export default function Room() {
   }, []);
 
   useEffect(() => {
-    const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
-    if (currentRoomId) {
-      setRoomId(currentRoomId);
+    const init = async () => {
+      const configured = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      setIsFirebaseConfigured(configured);
+      if (configured) {
+        await firebaseInitPromise;
+        setIsFirebaseReady(true);
+      }
+
+      const currentRoomId = Array.isArray(params.roomId) ? params.roomId[0] : params.roomId;
+      if (currentRoomId) {
+        setRoomId(currentRoomId);
+      }
       setIsLoading(false);
-    }
+    };
+    init();
   }, [params.roomId]);
+
 
   // Set up Firestore listener
   useEffect(() => {
-    setIsFirebaseConfigured(!!db);
-
-    if (!db || !roomId) return;
+    if (!isFirebaseReady || !roomId) return;
 
     const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
     const unsubscribe = onSnapshot(playersCollectionRef, (querySnapshot) => {
@@ -133,7 +143,7 @@ export default function Room() {
     });
 
     return () => unsubscribe(); // Clean up listener
-  }, [roomId]);
+  }, [roomId, isFirebaseReady]);
 
   // Set up Firestore listener for room data
   useEffect(() => {
@@ -786,23 +796,15 @@ export default function Room() {
               </button>
               {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
             </div>
-            <ul id="departure-times-list" className="mt-4 space-y-3">
-              {departureTimes.map((player, index) => (
-                <li key={index} className="p-4 rounded-md odd:bg-gray-50 even:bg-white">
-                  <strong className="text-lg font-medium text-gray-900">{player.name}:</strong>
-                  <ul className="pl-5 mt-2 space-y-1 text-gray-700">
-                    {timeCategories
-                      .filter(category => player.departures[category] !== undefined)
-                      .map(category => (
-                        <li
-                          key={category}
-                          className={selectedTargetForCopy === category ? 'text-red-600 font-bold' : ''}
-                        >
-                          {timeLabels[category]}: <strong className="font-semibold">{player.departures[category]}</strong>
-                        </li>
-                      ))}
-                  </ul>
-                </li>
+            <ul id="departure-times-list" className="mt-4 space-y-2">
+              {departureTimes
+                .filter(player => player.departures[selectedTargetForCopy])
+                .sort((a, b) => a.departures[selectedTargetForCopy].localeCompare(b.departures[selectedTargetForCopy]))
+                .map((player, index) => (
+                  <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium text-gray-800">{player.name}</span>
+                    <span className="font-mono text-lg font-bold text-blue-600">{player.departures[selectedTargetForCopy]}</span>
+                  </li>
               ))}
             </ul>
           </div>
