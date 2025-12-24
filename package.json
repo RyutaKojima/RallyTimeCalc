@@ -9,10 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@serwist/precaching": "^9.3.0",
+    "@serwist/sw": "^9.3.0",
+    "@serwist/turbopack": "^9.3.0",
+    "esbuild-wasm": "^0.27.2",
     "firebase": "^12.7.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "serwist": "^9.3.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
