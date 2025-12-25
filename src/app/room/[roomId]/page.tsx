@@ -817,35 +817,36 @@ export default function Room() {
               <p className="mt-2 text-center text-gray-600">
                 Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
               </p>
-              <div className="grid gap-6 mt-6 md:grid-cols-1">
-                <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
-                  <label className="mb-2 font-medium">Set Arrival Time from Now</label>
-                  <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center justify-center gap-4 p-4 mt-4 bg-gray-50 rounded-lg">
+                {/* Set from now section */}
+                <div className="flex flex-col items-center justify-center">
+                  <label className="text-sm font-medium text-gray-600">Set Arrival Time from Now</label>
+                  <div className="flex items-center gap-1 mt-1">
                     <input
                       type="number"
                       value={minutesFromNow}
                       onChange={(e) => setMinutesFromNow(e.target.value)}
-                      placeholder="Min"
-                      className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="min"
+                      className="w-16 px-2 py-1 text-sm text-right border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
                     />
                     <input
                       type="number"
                       value={secondsFromNow}
                       onChange={(e) => setSecondsFromNow(e.target.value)}
-                      placeholder="Sec"
-                      className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="sec"
+                      className="w-16 px-2 py-1 text-sm text-right border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
                     />
-                    <button onClick={handleSetArrivalTimeFromNow} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <button onClick={handleSetArrivalTimeFromNow} className="px-3 py-1 text-xs font-medium text-white bg-gray-500 rounded-md hover:bg-gray-600">
                       Set
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col items-center justify-center gap-2 p-4 mt-4 bg-gray-50 rounded-lg">
-                <label htmlFor="arrival-hour" className="font-medium">Arrival Time (UTC)</label>
-                <div className="flex items-center gap-2">
-                  <input
+                {/* Main arrival time input */}
+                <div className="flex flex-col items-center">
+                  <label htmlFor="arrival-hour" className="font-medium">Arrival Time (UTC)</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
                     id="arrival-hour"
                     type="number"
                     value={roomData.arrivalTime?.hour || ''}
@@ -871,6 +872,7 @@ export default function Room() {
                     placeholder="SS"
                     className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
                 </div>
               </div>
 
