@@ -756,11 +756,11 @@ export default function Room() {
                       <div className="text-right">
                         {result.delays[roomData.selectedTarget]! > 0 ? (
                           <>
-                            <span className="font-mono text-lg font-bold text-blue-600">
+                            <span className="text-sm text-gray-500">
                               Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
                             </span>
                             {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
-                              <div className="text-sm text-gray-500" data-testid={`rally-start-time-${result.name}`}>
+                              <div className="font-mono text-lg font-bold text-blue-600" data-testid={`rally-start-time-${result.name}`}>
                                 Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
                               </div>
                             }
