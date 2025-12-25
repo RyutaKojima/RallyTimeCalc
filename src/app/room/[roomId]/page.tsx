@@ -767,7 +767,7 @@ export default function Room() {
                           </>
                         ) : (
                           <span className="font-mono text-lg font-bold text-green-600">
-                            Depart Now
+                            最初にラリーを出す
                           </span>
                         )}
                       </div>
