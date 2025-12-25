@@ -809,7 +809,7 @@ export default function Room() {
                           </>
                         ) : (
                           <span className="font-mono text-lg font-bold text-green-600">
-                            Depart Now
+                            Deploy rally first
                           </span>
                         )}
                       </div>
