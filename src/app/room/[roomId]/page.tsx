@@ -530,7 +530,7 @@ export default function Room() {
             />
             <div className="space-y-3">
               {timeCategories.map((key) => (
-                <div key={key} className="grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2">
+                <div key={key} className={`grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2 p-2 rounded-md ${roomData.selectedTarget === key ? 'bg-blue-100' : ''}`}>
                   <label htmlFor={`new-${key}-min`} className="text-right text-gray-600">{timeLabels[key]}</label>
                   <input
                     id={`new-${key}-min`}
@@ -586,7 +586,7 @@ export default function Room() {
 
       <section className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-semibold text-blue-600">Player List</h2>
+          <h2 className="text-2xl font-semibold">Player List</h2>
           <button
             onClick={() => setIsPlayerListOpen(!isPlayerListOpen)}
             className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -628,7 +628,7 @@ export default function Room() {
                     />
                     <div className="space-y-3">
                       {timeCategories.map((key) => (
-                        <div key={key} className="grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2">
+                        <div key={key} className={`grid items-center grid-cols-[80px_1fr_auto_1fr] gap-2 p-2 rounded-md ${roomData.selectedTarget === key ? 'bg-blue-100' : ''}`}>
                           <label htmlFor={`edit-${key}-min`} className="text-right text-gray-600">{timeLabels[key]}</label>
                           <input
                             id={`edit-${key}-min`}
@@ -674,13 +674,15 @@ export default function Room() {
                           {timeCategories
                             .filter(category => player.times[category] > 0)
                             .map(category => (
-                              <li key={category}><span className="font-medium">{timeLabels[category]}:</span> {formatTime(player.times[category])}</li>
+                              <li key={category} className={roomData.selectedTarget === category ? 'font-bold text-blue-600' : ''}>
+                                <span className="font-medium">{timeLabels[category]}:</span> {formatTime(player.times[category])}
+                              </li>
                             ))}
                         </ul>
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => startEditing(player)} className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                      <button onClick={() => startEditing(player)} className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                         Edit
                       </button>
                       <button onClick={() => removePlayer(player.id)} disabled={!isFirebaseConfigured} className="px-3 py-1 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 disabled:bg-red-300">
