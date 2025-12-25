@@ -103,8 +103,6 @@ export default function Room() {
   const [secondsFromNow, setSecondsFromNow] = useState('');
   const [activeTab, setActiveTab] = useState('delays');
   const [isPlayerListOpen, setIsPlayerListOpen] = useState(true);
-  const [isResultsOpen, setIsResultsOpen] = useState(true);
-  const [isDepartureTimesOpen, setIsDepartureTimesOpen] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -769,69 +767,45 @@ export default function Room() {
                         Copy
                       </button>
                       {copyResultsFeedback && <span className="text-sm text-green-600">{copyResultsFeedback}</span>}
-                      <button
-                        data-testid="toggle-results-button"
-                        onClick={() => setIsResultsOpen(!isResultsOpen)}
-                        className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        aria-expanded={isResultsOpen}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={`transition-transform duration-200 ${isResultsOpen ? 'rotate-180' : ''
-                            }`}
-                        >
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </button>
                     </div>
                   </div>
-                  {isResultsOpen && (
-                    <div>
-                      <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
-                      <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
-                        {(() => {
-                          const sortedResults = results
-                            .filter(result => result.delays[roomData.selectedTarget] !== undefined)
-                            .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
+                  <div>
+                    <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
+                    <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
+                      {(() => {
+                        const sortedResults = results
+                          .filter(result => result.delays[roomData.selectedTarget] !== undefined)
+                          .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
 
-                          const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
-                          const basePlayerName = basePlayer ? basePlayer.name : "N/A";
+                        const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
+                        const basePlayerName = basePlayer ? basePlayer.name : "N/A";
 
-                          return sortedResults.map((result, index) => (
-                            <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
-                              <span className="font-medium text-gray-800">{result.name}</span>
-                              <div className="text-right">
-                                {result.delays[roomData.selectedTarget]! > 0 ? (
-                                  <>
-                                    <span className="text-sm text-gray-500">
-                                      Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
-                                    </span>
-                                    {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
-                                      <div className="font-mono font-bold text-blue-600" data-testid={`rally-start-time-${result.name}`}>
-                                        Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
-                                      </div>
-                                    }
-                                  </>
-                                ) : (
-                                  <span className="font-mono text-lg font-bold text-green-600">
-                                    Deploy rally first
+                        return sortedResults.map((result, index) => (
+                          <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium text-gray-800">{result.name}</span>
+                            <div className="text-right">
+                              {result.delays[roomData.selectedTarget]! > 0 ? (
+                                <>
+                                  <span className="text-sm text-gray-500">
+                                    Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
                                   </span>
-                                )}
-                              </div>
-                            </li>
-                          ));
-                        })()}
-                      </ul>
-                    </div>
-                  )}
+                                  {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
+                                    <div className="font-mono font-bold text-blue-600" data-testid={`rally-start-time-${result.name}`}>
+                                      Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
+                                    </div>
+                                  }
+                                </>
+                              ) : (
+                                <span className="font-mono text-lg font-bold text-green-600">
+                                  Deploy rally first
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ));
+                      })()}
+                    </ul>
+                  </div>
                 </div>
               )}
             </section>
@@ -904,49 +878,26 @@ export default function Room() {
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-semibold">Departure Times</h2>
-                    <button
-                      onClick={() => setIsDepartureTimesOpen(!isDepartureTimesOpen)}
-                      className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      aria-expanded={isDepartureTimesOpen}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className={`transition-transform duration-200 ${isDepartureTimesOpen ? 'rotate-180' : ''
-                          }`}
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </button>
                   </div>
-                  {isDepartureTimesOpen && (
-                    <div>
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                          Copy
-                        </button>
-                        {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
-                      </div>
-                      <ul id="departure-times-list" className="mt-4 space-y-2">
-                        {departureTimes
-                          .filter(player => player.departures[roomData.selectedTarget])
-                          .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
-                          .map((player, index) => (
-                            <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <span className="font-medium text-gray-800">{player.name}</span>
-                              <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
-                            </li>
-                          ))}
-                      </ul>
+                  <div>
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Copy
+                      </button>
+                      {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
                     </div>
-                  )}
+                    <ul id="departure-times-list" className="mt-4 space-y-2">
+                      {departureTimes
+                        .filter(player => player.departures[roomData.selectedTarget])
+                        .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
+                        .map((player, index) => (
+                          <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium text-gray-800">{player.name}</span>
+                            <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </section>
