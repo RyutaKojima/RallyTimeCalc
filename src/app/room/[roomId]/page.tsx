@@ -94,6 +94,7 @@ export default function Room() {
   const [isLoading, setIsLoading] = useState(true);
   const [copyFeedback, setCopyFeedback] = useState('');
   const [copyDepartureFeedback, setCopyDepartureFeedback] = useState('');
+  const [copyResultsFeedback, setCopyResultsFeedback] = useState('');
   const [roomData, setRoomData] = useState<RoomData>({
     rallyWaitTime: 0,
     arrivalTime: { hour: '', min: '', sec: '' },
@@ -430,6 +431,40 @@ export default function Room() {
     });
   };
 
+  const handleResultsCopy = () => {
+    if (results.length === 0) return;
+
+    const target = roomData.selectedTarget || 'castle';
+    let copyText = `Calculation Results for ${timeLabels[target]}:\n`;
+
+    const sortedResults = results
+      .filter(result => result.delays[target] !== undefined)
+      .sort((a, b) => (a.delays[target] ?? 0) - (b.delays[target] ?? 0));
+
+    const basePlayer = sortedResults.find(r => (r.delays[target] ?? 0) === 0);
+    const basePlayerName = basePlayer ? basePlayer.name : "N/A";
+
+    sortedResults.forEach(result => {
+      const delay = result.delays[target];
+      if (delay !== undefined) {
+        if (delay === 0) {
+          copyText += `${result.name}: Depart Now\n`;
+        } else if (roomData.rallyWaitTime > 0 && delay < roomData.rallyWaitTime) {
+          copyText += `${result.name}: Rally Start Time: ${basePlayerName} timer = ${formatTime(roomData.rallyWaitTime - delay)}\n`;
+        }
+        // If delay > 0 but the rally time condition isn't met, we add nothing, as per the request to not include "Wait for".
+      }
+    });
+
+    navigator.clipboard.writeText(copyText).then(() => {
+      setCopyResultsFeedback('Copied!');
+      setTimeout(() => setCopyResultsFeedback(''), 2000);
+    }, (err) => {
+      setCopyResultsFeedback('Failed!');
+      console.error('Could not copy text: ', err);
+    });
+  };
+
   const timeLabels: { [K in keyof MarchTimes]: string } = {
     castle: 'Castle',
     t1: 'Turret1',
@@ -715,8 +750,14 @@ export default function Room() {
       {results.length > 0 && (
         <section className="p-6 mt-8 bg-white border border-gray-200 rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">Calculation Results</h2>
+          <h2 className="text-2xl font-semibold">Calculation Results</h2>
+          <div className="flex items-center gap-x-2">
+            <button onClick={handleResultsCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+              Copy
+            </button>
+            {copyResultsFeedback && <span className="text-sm text-green-600">{copyResultsFeedback}</span>}
             <button
+              data-testid="toggle-results-button"
               onClick={() => setIsResultsOpen(!isResultsOpen)}
               className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-expanded={isResultsOpen}
@@ -737,6 +778,7 @@ export default function Room() {
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
+          </div>
           </div>
           {isResultsOpen && (
             <div>
