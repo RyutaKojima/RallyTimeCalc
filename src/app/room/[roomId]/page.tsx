@@ -101,6 +101,7 @@ export default function Room() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [minutesFromNow, setMinutesFromNow] = useState('');
   const [secondsFromNow, setSecondsFromNow] = useState('');
+  const [activeTab, setActiveTab] = useState('delays');
   const [isPlayerListOpen, setIsPlayerListOpen] = useState(true);
 
   useEffect(() => {
@@ -730,149 +731,178 @@ export default function Room() {
         </div>
       )}
 
-      <div className="mt-8 space-y-8">
-        <section id="calculation-results" className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-          {results.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Calculation Results</h2>
-                <div className="flex items-center gap-x-2">
-                  <button onClick={handleResultsCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                    Copy
-                  </button>
-                  {copyResultsFeedback && <span className="text-sm text-green-600">{copyResultsFeedback}</span>}
+      <div className="mt-8">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('delays')}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'delays'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+            >
+              Calculation Results
+            </button>
+            <button
+              onClick={() => setActiveTab('departures')}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'departures'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+            >
+              Departure Time Calculator
+            </button>
+          </nav>
+        </div>
+
+        <div className="mt-6">
+          {activeTab === 'delays' && (
+            <section id="calculation-results" className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
+              {results.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold">Calculation Results</h2>
+                    <div className="flex items-center gap-x-2">
+                      <button onClick={handleResultsCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Copy
+                      </button>
+                      {copyResultsFeedback && <span className="text-sm text-green-600">{copyResultsFeedback}</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
+                    <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
+                      {(() => {
+                        const sortedResults = results
+                          .filter(result => result.delays[roomData.selectedTarget] !== undefined)
+                          .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
+
+                        const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
+                        const basePlayerName = basePlayer ? basePlayer.name : "N/A";
+
+                        return sortedResults.map((result, index) => (
+                          <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium text-gray-800">{result.name}</span>
+                            <div className="text-right">
+                              {result.delays[roomData.selectedTarget]! > 0 ? (
+                                <>
+                                  <span className="text-sm text-gray-500">
+                                    Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
+                                  </span>
+                                  {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
+                                    <div className="font-mono font-bold text-blue-600" data-testid={`rally-start-time-${result.name}`}>
+                                      Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
+                                    </div>
+                                  }
+                                </>
+                              ) : (
+                                <span className="font-mono text-lg font-bold text-green-600">
+                                  Deploy rally first
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        ));
+                      })()}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {activeTab === 'departures' && (
+            <section id="departure-time-calculator" className="p-6 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold text-center">Departure Time Calculator</h2>
+              <p className="mt-2 text-center text-gray-600">
+                Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
+              </p>
+              <div className="grid gap-6 mt-6 md:grid-cols-1">
+                <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
+                  <label className="mb-2 font-medium">Set Arrival Time from Now</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={minutesFromNow}
+                      onChange={(e) => setMinutesFromNow(e.target.value)}
+                      placeholder="Min"
+                      className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="number"
+                      value={secondsFromNow}
+                      onChange={(e) => setSecondsFromNow(e.target.value)}
+                      placeholder="Sec"
+                      className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button onClick={handleSetArrivalTimeFromNow} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                      Set
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div>
-                <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
-                <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
-                  {(() => {
-                    const sortedResults = results
-                      .filter(result => result.delays[roomData.selectedTarget] !== undefined)
-                      .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
 
-                    const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
-                    const basePlayerName = basePlayer ? basePlayer.name : "N/A";
-
-                    return sortedResults.map((result, index) => (
-                      <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium text-gray-800">{result.name}</span>
-                        <div className="text-right">
-                          {result.delays[roomData.selectedTarget]! > 0 ? (
-                            <>
-                              <span className="text-sm text-gray-500">
-                                Wait for {formatTime(result.delays[roomData.selectedTarget] as number)}
-                              </span>
-                              {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
-                                <div className="font-mono font-bold text-blue-600" data-testid={`rally-start-time-${result.name}`}>
-                                  Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
-                                </div>
-                              }
-                            </>
-                          ) : (
-                            <span className="font-mono text-lg font-bold text-green-600">
-                              Deploy rally first
-                            </span>
-                          )}
-                        </div>
-                      </li>
-                    ));
-                  })()}
-                </ul>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <section id="departure-time-calculator" className="p-6 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold text-center">Departure Time Calculator</h2>
-          <p className="mt-2 text-center text-gray-600">
-            Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
-          </p>
-          <div className="grid gap-6 mt-6 md:grid-cols-1">
-            <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
-              <label className="mb-2 font-medium">Set Arrival Time from Now</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={minutesFromNow}
-                  onChange={(e) => setMinutesFromNow(e.target.value)}
-                  placeholder="Min"
-                  className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="number"
-                  value={secondsFromNow}
-                  onChange={(e) => setSecondsFromNow(e.target.value)}
-                  placeholder="Sec"
-                  className="w-24 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button onClick={handleSetArrivalTimeFromNow} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                  Set
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center gap-2 p-4 mt-4 bg-gray-50 rounded-lg">
-            <label htmlFor="arrival-hour" className="font-medium">Arrival Time (UTC)</label>
-            <div className="flex items-center gap-2">
-              <input
-                id="arrival-hour"
-                type="number"
-                value={roomData.arrivalTime?.hour || ''}
-                onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
-                placeholder="HH"
-                className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span>:</span>
-              <input
-                id="arrival-min"
-                type="number"
-                value={roomData.arrivalTime?.min || ''}
-                onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
-                placeholder="MM"
-                className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span>:</span>
-              <input
-                id="arrival-sec"
-                type="number"
-                value={roomData.arrivalTime?.sec || ''}
-                onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
-                placeholder="SS"
-                className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {departureTimes.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Departure Times</h2>
-              </div>
-              <div>
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                    Copy
-                  </button>
-                  {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
+              <div className="flex flex-col items-center justify-center gap-2 p-4 mt-4 bg-gray-50 rounded-lg">
+                <label htmlFor="arrival-hour" className="font-medium">Arrival Time (UTC)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="arrival-hour"
+                    type="number"
+                    value={roomData.arrivalTime?.hour || ''}
+                    onChange={(e) => handleArrivalTimeChange(e.target.value, 'hour')}
+                    placeholder="HH"
+                    className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span>:</span>
+                  <input
+                    id="arrival-min"
+                    type="number"
+                    value={roomData.arrivalTime?.min || ''}
+                    onChange={(e) => handleArrivalTimeChange(e.target.value, 'min')}
+                    placeholder="MM"
+                    className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span>:</span>
+                  <input
+                    id="arrival-sec"
+                    type="number"
+                    value={roomData.arrivalTime?.sec || ''}
+                    onChange={(e) => handleArrivalTimeChange(e.target.value, 'sec')}
+                    placeholder="SS"
+                    className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-                <ul id="departure-times-list" className="mt-4 space-y-2">
-                  {departureTimes
-                    .filter(player => player.departures[roomData.selectedTarget])
-                    .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
-                    .map((player, index) => (
-                      <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium text-gray-800">{player.name}</span>
-                        <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
-                      </li>
-                    ))}
-                </ul>
               </div>
-            </div>
+
+              {departureTimes.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold">Departure Times</h2>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <button onClick={handleDepartureCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Copy
+                      </button>
+                      {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
+                    </div>
+                    <ul id="departure-times-list" className="mt-4 space-y-2">
+                      {departureTimes
+                        .filter(player => player.departures[roomData.selectedTarget])
+                        .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
+                        .map((player, index) => (
+                          <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium text-gray-800">{player.name}</span>
+                            <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </section>
           )}
-        </section>
+        </div>
       </div>
     </main>
   );
