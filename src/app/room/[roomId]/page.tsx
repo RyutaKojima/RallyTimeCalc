@@ -432,10 +432,10 @@ export default function Room() {
 
   const timeLabels: { [K in keyof MarchTimes]: string } = {
     castle: 'Castle',
-    t1: 'T1',
-    t2: 'T2',
-    t3: 'T3',
-    t4: 'T4',
+    t1: 'Turret1',
+    t2: 'Turret2',
+    t3: 'Turret3',
+    t4: 'Turret4',
   };
 
   const shouldShowAddPlayerForm = isNewPlayerFormVisible || players.length === 0;
