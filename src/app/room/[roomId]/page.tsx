@@ -742,10 +742,15 @@ export default function Room() {
             <div>
               <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
               <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
-                {results
-                  .filter(result => result.delays[roomData.selectedTarget] !== undefined)
-                  .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0))
-                  .map((result, index) => (
+                {(() => {
+                  const sortedResults = results
+                    .filter(result => result.delays[roomData.selectedTarget] !== undefined)
+                    .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
+
+                  const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
+                  const basePlayerName = basePlayer ? basePlayer.name : "N/A";
+
+                  return sortedResults.map((result, index) => (
                     <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="font-medium text-gray-800">{result.name}</span>
                       <div className="text-right">
@@ -756,7 +761,7 @@ export default function Room() {
                             </span>
                             {roomData.rallyWaitTime > 0 && (result.delays[roomData.selectedTarget] as number) < roomData.rallyWaitTime &&
                               <div className="text-sm text-gray-500" data-testid={`rally-start-time-${result.name}`}>
-                                Rally Start Time: {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
+                                Rally Start Time: {basePlayerName} timer = {formatTime(roomData.rallyWaitTime - (result.delays[roomData.selectedTarget] as number))}
                               </div>
                             }
                           </>
@@ -767,7 +772,8 @@ export default function Room() {
                         )}
                       </div>
                     </li>
-                  ))}
+                  ));
+                })()}
               </ul>
             </div>
           )}
