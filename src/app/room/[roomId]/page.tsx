@@ -427,7 +427,7 @@ export default function Room() {
     if (results.length === 0) return;
 
     const target = roomData.selectedTarget || 'castle';
-    let copyText = `Calculation Results for ${timeLabels[target]}:\n`;
+    let copyText = `Relative Time for ${timeLabels[target]}:\n`;
 
     const sortedResults = results
       .filter(result => result.delays[target] !== undefined)
@@ -743,7 +743,7 @@ export default function Room() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
-              Calculation Results
+              Relative Time
             </button>
             <button
               onClick={() => setActiveTab('departures')}
@@ -752,7 +752,7 @@ export default function Room() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
-              Departure Time Calculator
+              Absolute Time
             </button>
           </nav>
         </div>
@@ -763,7 +763,7 @@ export default function Room() {
               {results.length > 0 && (
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-semibold">Calculation Results</h2>
+                    <h2 className="text-2xl font-semibold">Relative Time</h2>
                     <div className="flex items-center gap-x-2">
                       <button onClick={handleResultsCopy} className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
                         Copy
@@ -815,7 +815,7 @@ export default function Room() {
 
           {activeTab === 'departures' && (
             <section id="departure-time-calculator" className="p-6 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold text-center">Departure Time Calculator</h2>
+              <h2 className="text-2xl font-semibold text-center">Absolute Time</h2>
               <p className="mt-2 text-center text-gray-600">
                 Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
               </p>
