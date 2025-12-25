@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore } from 'firebase/firestore';
@@ -75,8 +75,6 @@ export default function Room() {
     t3: { min: '', sec: '' },
     t4: { min: '', sec: '' },
   });
-  const [results, setResults] = useState<Result[]>([]);
-  const [departureTimes, setDepartureTimes] = useState<DepartureResult[]>([]);
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingPlayerName, setEditingPlayerName] = useState('');
   const [editingPlayerTimes, setEditingPlayerTimes] = useState<PlayerTimeInput>({
@@ -173,6 +171,66 @@ export default function Room() {
     return () => unsubscribe(); // Clean up the listener
   }, [roomId]);
 
+  const results: Result[] = useMemo(() => {
+    const enabledPlayers = players.filter(p => p.enabled !== false);
+    if (enabledPlayers.length < 2) {
+      return [];
+    }
+
+    const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
+
+    enabledPlayers.forEach(p => {
+      newResults[p.name] = { name: p.name, delays: {} };
+    });
+
+    timeCategories.forEach(category => {
+      const playersForCategory = enabledPlayers.filter(p => p.times[category] > 0);
+
+      if (playersForCategory.length >= 2) {
+        const maxTime = Math.max(...playersForCategory.map(p => p.times[category]));
+        playersForCategory.forEach(player => {
+          newResults[player.name].delays[category] = maxTime - player.times[category];
+        });
+      }
+    });
+
+    return Object.values(newResults);
+  }, [players]);
+
+  const departureTimes: DepartureResult[] = useMemo(() => {
+    const arrivalHour = parseInt(roomData.arrivalTime.hour, 10) || 0;
+    const arrivalMin = parseInt(roomData.arrivalTime.min, 10) || 0;
+    const arrivalSec = parseInt(roomData.arrivalTime.sec, 10) || 0;
+
+    if (isNaN(arrivalHour) || isNaN(arrivalMin) || isNaN(arrivalSec)) {
+      return [];
+    }
+    const enabledPlayers = players.filter(p => p.enabled !== false);
+    if (enabledPlayers.length < 1) {
+      return [];
+    }
+
+    const arrivalDate = new Date();
+    arrivalDate.setHours(arrivalHour, arrivalMin, arrivalSec, 0);
+
+    const newDepartureTimes = enabledPlayers.map(player => {
+      const departures: { [key: string]: string } = {};
+      for (const key in player.times) {
+        const marchTime = player.times[key as keyof MarchTimes];
+        if (marchTime > 0) {
+          const departureDate = new Date(arrivalDate.getTime() - (marchTime + roomData.rallyWaitTime) * 1000);
+          const hours = String(departureDate.getHours()).padStart(2, '0');
+          const minutes = String(departureDate.getMinutes()).padStart(2, '0');
+          const seconds = String(departureDate.getSeconds()).padStart(2, '0');
+          departures[key] = `${hours}:${minutes}:${seconds}`;
+        }
+      }
+      return { name: player.name, departures };
+    });
+
+    return newDepartureTimes;
+  }, [players, roomData.arrivalTime, roomData.rallyWaitTime]);
+
   const addPlayer = async () => {
     if (!db || !roomId) return;
     const parsedTimes = {
@@ -196,7 +254,6 @@ export default function Room() {
         t3: { min: '', sec: '' },
         t4: { min: '', sec: '' },
       });
-      setResults([]); // Clear previous results
       if (!isContinuousInput) {
         setIsNewPlayerFormVisible(false); // Hide form after adding
       }
@@ -210,37 +267,9 @@ export default function Room() {
     if (window.confirm('このプレイヤーを削除してもよろしいですか？')) {
       const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
       await deleteDoc(playerDocRef);
-      setResults([]); // Clear previous results
     }
   };
 
-  const calculateDelays = () => {
-    const enabledPlayers = players.filter(p => p.enabled !== false);
-    if (enabledPlayers.length < 2) {
-      alert('Please select at least two players to calculate delays.');
-      setResults([]);
-      return;
-    }
-
-    const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
-
-    enabledPlayers.forEach(p => {
-      newResults[p.name] = { name: p.name, delays: {} };
-    });
-
-    timeCategories.forEach(category => {
-      const playersForCategory = enabledPlayers.filter(p => p.times[category] > 0);
-
-      if (playersForCategory.length >= 2) {
-        const maxTime = Math.max(...playersForCategory.map(p => p.times[category]));
-        playersForCategory.forEach(player => {
-          newResults[player.name].delays[category] = maxTime - player.times[category];
-        });
-      }
-    });
-
-    setResults(Object.values(newResults));
-  };
 
   const handleTogglePlayerEnabled = async (id: string, enabled: boolean) => {
     if (!db || !roomId) return;
@@ -329,7 +358,6 @@ export default function Room() {
         t3: { min: '', sec: '' },
         t4: { min: '', sec: '' },
       });
-      setResults([]);
     } else {
       alert('Please enter a valid name and at least one valid time.');
     }
@@ -385,41 +413,6 @@ export default function Room() {
     await setDoc(roomDocRef, { arrivalTime: newArrivalTime }, { merge: true });
   };
 
-  const calculateDepartureTimes = () => {
-    const arrivalHour = parseInt(roomData.arrivalTime.hour, 10) || 0;
-    const arrivalMin = parseInt(roomData.arrivalTime.min, 10) || 0;
-    const arrivalSec = parseInt(roomData.arrivalTime.sec, 10) || 0;
-
-    if (isNaN(arrivalHour) || isNaN(arrivalMin) || isNaN(arrivalSec)) {
-      alert('Please enter a valid arrival time.');
-      return;
-    }
-    const enabledPlayers = players.filter(p => p.enabled !== false);
-    if (enabledPlayers.length < 1) {
-      setDepartureTimes([]);
-      return;
-    }
-
-    const arrivalDate = new Date();
-    arrivalDate.setHours(arrivalHour, arrivalMin, arrivalSec, 0);
-
-    const newDepartureTimes = enabledPlayers.map(player => {
-      const departures: { [key: string]: string } = {};
-      for (const key in player.times) {
-        const marchTime = player.times[key as keyof MarchTimes];
-        if (marchTime > 0) {
-          const departureDate = new Date(arrivalDate.getTime() - (marchTime + roomData.rallyWaitTime) * 1000);
-          const hours = String(departureDate.getHours()).padStart(2, '0');
-          const minutes = String(departureDate.getMinutes()).padStart(2, '0');
-          const seconds = String(departureDate.getSeconds()).padStart(2, '0');
-          departures[key] = `${hours}:${minutes}:${seconds}`;
-        }
-      }
-      return { name: player.name, departures };
-    });
-
-    setDepartureTimes(newDepartureTimes);
-  };
 
   const handleCopy = () => {
     const url = window.location.href;
@@ -767,13 +760,6 @@ export default function Room() {
         <div className="mt-6">
           {activeTab === 'delays' && (
             <section id="calculation-results" className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-              {players.length > 0 && (
-                <div className="mt-6 text-center">
-                  <button onClick={calculateDelays} className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700">
-                    Calculate Delays
-                  </button>
-                </div>
-              )}
               {results.length > 0 && (
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
@@ -912,12 +898,6 @@ export default function Room() {
                     className="w-20 px-3 py-2 text-right border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button onClick={calculateDepartureTimes} className="px-6 py-3 font-semibold text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700">
-                  Calculate Departure Times
-                </button>
               </div>
 
               {departureTimes.length > 0 && (
