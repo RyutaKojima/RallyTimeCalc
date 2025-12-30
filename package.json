@@ -9,21 +9,21 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@serwist/precaching": "^9.3.0",
-    "@serwist/sw": "^9.3.0",
-    "@serwist/turbopack": "^9.3.0",
+    "@serwist/precaching": "^9.4.2",
+    "@serwist/sw": "^9.4.2",
+    "@serwist/turbopack": "^9.4.2",
     "esbuild-wasm": "^0.27.2",
     "firebase": "^12.7.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "serwist": "^9.3.0",
+    "serwist": "^9.4.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^20",
+    "@types/node": "^20.19.27",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.2",
