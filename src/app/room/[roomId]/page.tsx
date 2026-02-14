@@ -182,12 +182,24 @@ export default function Room() {
     });
 
     timeCategories.forEach(category => {
-      const playersForCategory = enabledPlayers.filter(p => p.times[category] > 0);
+      const { maxTime, count } = enabledPlayers.reduce(
+        (acc, p) => {
+          const time = p.times[category];
+          if (time > 0) {
+            if (time > acc.maxTime) acc.maxTime = time;
+            acc.count++;
+          }
+          return acc;
+        },
+        { maxTime: 0, count: 0 }
+      );
 
-      if (playersForCategory.length >= 2) {
-        const maxTime = Math.max(...playersForCategory.map(p => p.times[category]));
-        playersForCategory.forEach(player => {
-          newResults[player.name].delays[category] = maxTime - player.times[category];
+      if (count >= 2) {
+        enabledPlayers.forEach(player => {
+          const time = player.times[category];
+          if (time > 0) {
+            newResults[player.name].delays[category] = maxTime - time;
+          }
         });
       }
     });
