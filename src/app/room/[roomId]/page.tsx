@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
-import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore, Timestamp, writeBatch, getDocs } from 'firebase/firestore';
 
 
 const parseTimeToSeconds = (time: TimeInput): number => {
@@ -16,6 +16,15 @@ const formatTime = (totalSeconds: number): string => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+const ROOM_TTL_DAYS = 60;
+const TTL_REFRESH_THRESHOLD_DAYS = ROOM_TTL_DAYS - 1;
+
+const getExpirationDate = (): Date => {
+  const date = new Date();
+  date.setDate(date.getDate() + ROOM_TTL_DAYS);
+  return date;
 };
 
 interface MarchTimes {
@@ -31,6 +40,7 @@ interface Player {
   name: string;
   times: MarchTimes;
   enabled: boolean;
+  expireAt?: Timestamp | Date;
 }
 
 interface Result {
@@ -58,6 +68,7 @@ interface RoomData {
   rallyWaitTime: number;
   arrivalTime: ArrivalTimeInput;
   selectedTarget: keyof MarchTimes;
+  expireAt?: Timestamp | Date;
 }
 
 type PlayerTimeInput = { [key in keyof MarchTimes]: TimeInput };
@@ -153,13 +164,35 @@ export default function Room() {
     const roomDocRef = doc(db as Firestore, 'rooms', roomId);
     const unsubscribe = onSnapshot(roomDocRef, (docSnap) => {
       if (docSnap.exists()) {
-        setRoomData(docSnap.data() as RoomData);
+        const data = docSnap.data() as RoomData;
+        setRoomData(data);
+
+        // Check and update expiration if needed (throttle updates to roughly once a day)
+        const expireDate = data.expireAt instanceof Timestamp ? data.expireAt.toDate() : data.expireAt;
+        const threshold = new Date();
+        threshold.setDate(threshold.getDate() + TTL_REFRESH_THRESHOLD_DAYS);
+
+        if (!expireDate || expireDate < threshold) {
+          const batch = writeBatch(db as Firestore);
+          const newExpireDate = getExpirationDate();
+          batch.update(roomDocRef, { expireAt: newExpireDate });
+
+          // Also update all players in the subcollection
+          const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
+          getDocs(playersCollectionRef).then(snapshot => {
+            snapshot.docs.forEach(doc => {
+              batch.update(doc.ref, { expireAt: newExpireDate });
+            });
+            return batch.commit();
+          }).catch(e => console.error("Error batch extending expiration:", e));
+        }
       } else {
         // If the room document doesn't exist, create it with default values
         const defaultRoomData: RoomData = {
           rallyWaitTime: 0,
           arrivalTime: { hour: '', min: '', sec: '' },
-          selectedTarget: 'castle'
+          selectedTarget: 'castle',
+          expireAt: getExpirationDate()
         };
         // Use setDoc to create the document
         setDoc(roomDocRef, defaultRoomData);
@@ -254,7 +287,7 @@ export default function Room() {
 
     if (newPlayerName && timeValues.length > 0) {
       const playersCollectionRef = collection(db as Firestore, 'rooms', roomId, 'players');
-      await addDoc(playersCollectionRef, { name: newPlayerName, times: parsedTimes, enabled: true });
+      await addDoc(playersCollectionRef, { name: newPlayerName, times: parsedTimes, enabled: true, expireAt: getExpirationDate() });
 
       setNewPlayerName('');
       setNewPlayerTimes({
