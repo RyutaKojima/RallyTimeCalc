@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PWA App",
-    short_name: "PWA App",
-    description: "A simple PWA app.",
+    name: "Rally Calc",
+    short_name: "Rally Calc",
+    description: "Rally Calc",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
