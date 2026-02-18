@@ -44,6 +44,7 @@ interface Player {
 }
 
 interface Result {
+  id: string;
   name: string;
   delays: { [key in keyof MarchTimes]?: number };
 }
@@ -60,6 +61,7 @@ interface ArrivalTimeInput {
 }
 
 interface DepartureResult {
+  id: string;
   name: string;
   departures: { [key: string]: string };
 }
@@ -208,10 +210,10 @@ export default function Room() {
       return [];
     }
 
-    const newResults: { [playerName: string]: { name: string; delays: { [key in keyof MarchTimes]?: number } } } = {};
+    const newResults: { [playerId: string]: Result } = {};
 
     enabledPlayers.forEach(p => {
-      newResults[p.name] = { name: p.name, delays: {} };
+      newResults[p.id] = { id: p.id, name: p.name, delays: {} };
     });
 
     timeCategories.forEach(category => {
@@ -231,7 +233,7 @@ export default function Room() {
         enabledPlayers.forEach(player => {
           const time = player.times[category];
           if (time > 0) {
-            newResults[player.name].delays[category] = maxTime - time;
+            newResults[player.id].delays[category] = maxTime - time;
           }
         });
       }
@@ -268,7 +270,7 @@ export default function Room() {
           departures[key] = `${hours}:${minutes}:${seconds}`;
         }
       }
-      return { name: player.name, departures };
+      return { id: player.id, name: player.name, departures };
     });
 
     return newDepartureTimes;
@@ -827,8 +829,8 @@ export default function Room() {
                         const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
                         const basePlayerName = basePlayer ? basePlayer.name : "N/A";
 
-                        return sortedResults.map((result, index) => (
-                          <li key={index} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                        return sortedResults.map((result) => (
+                          <li key={result.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="font-medium text-gray-800">{result.name}</span>
                             <div className="text-right">
                               {result.delays[roomData.selectedTarget]! > 0 ? (
@@ -939,8 +941,8 @@ export default function Room() {
                       {departureTimes
                         .filter(player => player.departures[roomData.selectedTarget])
                         .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
-                        .map((player, index) => (
-                          <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        .map((player) => (
+                          <li key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="font-medium text-gray-800">{player.name}</span>
                             <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
                           </li>
