@@ -276,6 +276,26 @@ export default function Room() {
     return newDepartureTimes;
   }, [players, roomData.arrivalTime, roomData.rallyWaitTime]);
 
+  const sortedDepartureTimes = useMemo(() => {
+    const target = roomData.selectedTarget;
+    return [...departureTimes]
+      .filter(player => player.departures[target])
+      .sort((a, b) => a.departures[target].localeCompare(b.departures[target]));
+  }, [departureTimes, roomData.selectedTarget]);
+
+  const sortedResults = useMemo(() => {
+    const target = roomData.selectedTarget;
+    return results
+      .filter(result => result.delays[target] !== undefined)
+      .sort((a, b) => (a.delays[target] ?? 0) - (b.delays[target] ?? 0));
+  }, [results, roomData.selectedTarget]);
+
+  const basePlayerName = useMemo(() => {
+    const target = roomData.selectedTarget;
+    const basePlayer = sortedResults.find(r => (r.delays[target] ?? 0) === 0);
+    return basePlayer ? basePlayer.name : "N/A";
+  }, [sortedResults, roomData.selectedTarget]);
+
   const addPlayer = async () => {
     if (!db || !roomId) return;
     const parsedTimes = {
@@ -342,19 +362,12 @@ export default function Room() {
   };
 
   const handleDepartureCopy = () => {
-    if (departureTimes.length === 0) return;
+    if (sortedDepartureTimes.length === 0) return;
 
     const target = roomData.selectedTarget;
     let copyText = `${timeLabels[target]} Departure Times:\n`;
 
-    const sortedTimes = [...departureTimes]
-      .filter(p => p.departures[target])
-      .sort((a, b) => {
-        // Sort by departure time ascending
-        return a.departures[target].localeCompare(b.departures[target]);
-      });
-
-    sortedTimes.forEach(player => {
+    sortedDepartureTimes.forEach(player => {
       copyText += `${player.name}: ${player.departures[target]}\n`;
     });
 
@@ -471,17 +484,10 @@ export default function Room() {
   };
 
   const handleResultsCopy = () => {
-    if (results.length === 0) return;
+    if (sortedResults.length === 0) return;
 
     const target = roomData.selectedTarget || 'castle';
     let copyText = `Relative Time for ${timeLabels[target]}:\n`;
-
-    const sortedResults = results
-      .filter(result => result.delays[target] !== undefined)
-      .sort((a, b) => (a.delays[target] ?? 0) - (b.delays[target] ?? 0));
-
-    const basePlayer = sortedResults.find(r => (r.delays[target] ?? 0) === 0);
-    const basePlayerName = basePlayer ? basePlayer.name : "N/A";
 
     sortedResults.forEach(result => {
       const delay = result.delays[target];
@@ -821,15 +827,7 @@ export default function Room() {
                   <div>
                     <p className="mb-4 text-gray-600">To synchronize the arrival, players should depart with the following delays:</p>
                     <ul className="mt-4 space-y-2" data-testid="calculation-results-list">
-                      {(() => {
-                        const sortedResults = results
-                          .filter(result => result.delays[roomData.selectedTarget] !== undefined)
-                          .sort((a, b) => (a.delays[roomData.selectedTarget] ?? 0) - (b.delays[roomData.selectedTarget] ?? 0));
-
-                        const basePlayer = sortedResults.find(r => (r.delays[roomData.selectedTarget] ?? 0) === 0);
-                        const basePlayerName = basePlayer ? basePlayer.name : "N/A";
-
-                        return sortedResults.map((result) => (
+                      {sortedResults.map((result) => (
                           <li key={result.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="font-medium text-gray-800">{result.name}</span>
                             <div className="text-right">
@@ -851,8 +849,7 @@ export default function Room() {
                               )}
                             </div>
                           </li>
-                        ));
-                      })()}
+                        ))}
                     </ul>
                   </div>
                 </div>
@@ -938,10 +935,7 @@ export default function Room() {
                       {copyDepartureFeedback && <span className="ml-3 text-sm text-green-600">{copyDepartureFeedback}</span>}
                     </div>
                     <ul id="departure-times-list" className="mt-4 space-y-2">
-                      {departureTimes
-                        .filter(player => player.departures[roomData.selectedTarget])
-                        .sort((a, b) => a.departures[roomData.selectedTarget].localeCompare(b.departures[roomData.selectedTarget]))
-                        .map((player) => (
+                      {sortedDepartureTimes.map((player) => (
                           <li key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span className="font-medium text-gray-800">{player.name}</span>
                             <span className="font-mono text-lg font-bold text-blue-600">{player.departures[roomData.selectedTarget]}</span>
