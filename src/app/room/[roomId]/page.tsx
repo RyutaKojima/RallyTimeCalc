@@ -206,38 +206,58 @@ export default function Room() {
 
   const results: Result[] = useMemo(() => {
     const enabledPlayers = players.filter(p => p.enabled !== false);
-    if (enabledPlayers.length < 2) {
+    const numEnabled = enabledPlayers.length;
+    if (numEnabled < 2) {
       return [];
     }
 
     const newResults: { [playerId: string]: Result } = {};
+    const stats = {} as Record<keyof MarchTimes, { maxTime: number, count: number }>;
+    for (let i = 0; i < timeCategories.length; i++) {
+      stats[timeCategories[i]] = { maxTime: 0, count: 0 };
+    }
 
-    enabledPlayers.forEach(p => {
+    // First pass: initialize results and collect stats for all categories
+    for (let i = 0; i < numEnabled; i++) {
+      const p = enabledPlayers[i];
       newResults[p.id] = { id: p.id, name: p.name, delays: {} };
-    });
 
-    timeCategories.forEach(category => {
-      const { maxTime, count } = enabledPlayers.reduce(
-        (acc, p) => {
+      for (let j = 0; j < timeCategories.length; j++) {
+        const category = timeCategories[j];
+        const time = p.times[category];
+        if (time > 0) {
+          const s = stats[category];
+          if (time > s.maxTime) s.maxTime = time;
+          s.count++;
+        }
+      }
+    }
+
+    // Pre-filter valid categories for the second pass
+    const validCategories: { category: keyof MarchTimes, maxTime: number }[] = [];
+    for (let j = 0; j < timeCategories.length; j++) {
+      const category = timeCategories[j];
+      const s = stats[category];
+      if (s.count >= 2) {
+        validCategories.push({ category, maxTime: s.maxTime });
+      }
+    }
+
+    // Second pass: calculate delays only for valid categories
+    const numValid = validCategories.length;
+    if (numValid > 0) {
+      for (let i = 0; i < numEnabled; i++) {
+        const p = enabledPlayers[i];
+        const playerDelays = newResults[p.id].delays;
+        for (let j = 0; j < numValid; j++) {
+          const { category, maxTime } = validCategories[j];
           const time = p.times[category];
           if (time > 0) {
-            if (time > acc.maxTime) acc.maxTime = time;
-            acc.count++;
+            playerDelays[category] = maxTime - time;
           }
-          return acc;
-        },
-        { maxTime: 0, count: 0 }
-      );
-
-      if (count >= 2) {
-        enabledPlayers.forEach(player => {
-          const time = player.times[category];
-          if (time > 0) {
-            newResults[player.id].delays[category] = maxTime - time;
-          }
-        });
+        }
       }
-    });
+    }
 
     return Object.values(newResults);
   }, [players]);
