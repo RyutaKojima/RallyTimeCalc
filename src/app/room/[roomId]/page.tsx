@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import Clock from '../../../components/Clock';
 import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, setDoc, Firestore, Timestamp, writeBatch, getDocs } from 'firebase/firestore';
 
@@ -111,18 +112,10 @@ export default function Room() {
     arrivalTime: { hour: '', min: '', sec: '' },
     selectedTarget: 'castle',
   });
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [minutesFromNow, setMinutesFromNow] = useState('');
   const [secondsFromNow, setSecondsFromNow] = useState('');
   const [activeTab, setActiveTab] = useState('delays');
   const [isPlayerListOpen, setIsPlayerListOpen] = useState(true);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -863,9 +856,7 @@ export default function Room() {
           {activeTab === 'departures' && (
             <section id="departure-time-calculator" className="p-6 bg-white border-t-4 border-blue-500 rounded-lg shadow-md">
               <h2 className="text-2xl font-semibold text-center">Absolute Time</h2>
-              <p className="mt-2 text-center text-gray-600">
-                Current UTC Time: <span className="font-mono font-bold text-orange-500">{currentTime.toUTCString().match(/(\d{2}:\d{2}:\d{2})/)?.[0]}</span>
-              </p>
+              <Clock />
               <div className="flex flex-col items-center justify-center gap-4 p-4 mt-4 bg-gray-50 rounded-lg">
                 {/* Set from now section */}
                 <div className="flex flex-col items-center justify-center">
