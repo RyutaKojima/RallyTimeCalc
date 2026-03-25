@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Clock from '../../../components/Clock';
 import { db, firebaseInitPromise } from '../../../lib/firebase'; // Adjust path as needed
@@ -349,11 +349,11 @@ export default function Room() {
   };
 
 
-  const handleTogglePlayerEnabled = async (id: string, enabled: boolean) => {
+  const handleTogglePlayerEnabled = useCallback(async (id: string, enabled: boolean) => {
     if (!db || !roomId) return;
     const playerDocRef = doc(db as Firestore, 'rooms', roomId, 'players', id);
     await updateDoc(playerDocRef, { enabled });
-  };
+  }, [roomId]);
 
   const handleNewTimeChange = (key: keyof PlayerTimeInput, value: string, field: 'min' | 'sec') => {
     setNewPlayerTimes(prev => ({
